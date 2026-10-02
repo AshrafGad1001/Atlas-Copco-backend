@@ -1,15 +1,16 @@
-const xlsx = require('xlsx');
+const excel = require('exceljs');
 const Visit = require('../models/Visit');
 const Company = require('../models/Company');
 const User = require('../models/User');
 const asyncHandler = require('../utils/asyncHandler');
 
 exports.getStats = asyncHandler(async (req, res) => {
-  const totalVisits = await Visit.countDocuments();
+  const totalVisits = await Visit.countDocuments({ isDeleted: { $ne: true } });
   const totalCompanies = await Company.countDocuments();
   const totalEngineers = await User.countDocuments({ role: 'engineer' });
   
   const visitsByStatus = await Visit.aggregate([
+    { $match: { isDeleted: { $ne: true } } },
     { $group: { _id: '$status', count: { $sum: 1 } } }
   ]);
 
@@ -25,7 +26,7 @@ exports.getStats = asyncHandler(async (req, res) => {
 });
 
 exports.exportVisitsToExcel = asyncHandler(async (req, res) => {
-  const filter = {};
+  const filter = { isDeleted: { $ne: true } };
   if (req.user.role === 'engineer') {
     filter.engineer = req.user._id;
   }
@@ -34,25 +35,38 @@ exports.exportVisitsToExcel = asyncHandler(async (req, res) => {
     .populate('company', 'name region')
     .populate('engineer', 'fullName username')
     .sort('-visitDate')
-    .lean(); // Use lean for faster plain JS objects
+    .lean();
 
-  const exportData = visits.map(v => ({
-    'التاريخ': new Date(v.visitDate).toLocaleDateString('ar-EG'),
-    'المهندس': v.engineer?.fullName || 'غير محدد',
-    'الشركة': v.company?.name || 'غير محدد',
-    'الحالة': v.status === 'completed' ? 'مكتملة' : v.status === 'planned' ? 'مخطط لها' : 'ملغاة',
-    'ملاحظات': v.notes || '-'
-  }));
+  const workbook = new excel.Workbook();
+  const worksheet = workbook.addWorksheet('Visits');
 
-  const worksheet = xlsx.utils.json_to_sheet(exportData);
-  const workbook = xlsx.utils.book_new();
-  xlsx.utils.book_append_sheet(workbook, worksheet, 'Visits');
+  worksheet.columns = [
+    { header: 'التاريخ', key: 'date', width: 15 },
+    { header: 'المهندس', key: 'engineer', width: 25 },
+    { header: 'الشركة', key: 'company', width: 25 },
+    { header: 'النوع', key: 'type', width: 15 },
+    { header: 'الحالة', key: 'status', width: 15 },
+    { header: 'الحاضرين', key: 'attendees', width: 30 },
+    { header: 'الملاحظات', key: 'notes', width: 40 },
+    { header: 'الخطوة القادمة', key: 'nextStep', width: 30 }
+  ];
 
-  // Generate buffer
-  const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+  visits.forEach(v => {
+    worksheet.addRow({
+      date: new Date(v.visitDate).toLocaleDateString('ar-EG'),
+      engineer: v.engineer?.fullName || 'غير محدد',
+      company: v.company?.name || 'غير محدد',
+      type: v.type || '-',
+      status: v.status === 'completed' ? 'مكتملة' : v.status === 'planned' ? 'مخطط لها' : 'ملغاة',
+      attendees: v.attendees && v.attendees.length > 0 ? v.attendees.map(a => `${a.name}${a.jobTitle ? ' ('+a.jobTitle+')' : ''}`).join('، ') : '-',
+      notes: v.notes || '-',
+      nextStep: v.nextStep || '-'
+    });
+  });
 
   res.setHeader('Content-Disposition', 'attachment; filename="visits_report.xlsx"');
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   
-  res.status(200).send(buffer);
+  await workbook.xlsx.write(res);
+  res.end();
 });
