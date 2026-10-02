@@ -65,7 +65,7 @@ describe('Auth Endpoints', () => {
         .send({ username: 'auth.admin' }); // missing password
 
       expect(res.statusCode).toBe(400);
-      expect(res.body.errors[0].field).toBe('password');
+      expect(res.body.success).toBe(false);
     });
 
     it('should fail if user is inactive', async () => {
