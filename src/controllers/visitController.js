@@ -46,6 +46,14 @@ exports.updateVisit = asyncHandler(async (req, res) => {
     return res.status(403).json({ success: false, message: 'غير مصرح لك بتعديل هذه الزيارة' });
   }
 
+  // 24 hours lock
+  if (req.user.role === 'engineer') {
+    const hoursSinceCreation = (Date.now() - visit.createdAt.getTime()) / (1000 * 60 * 60);
+    if (hoursSinceCreation > 24) {
+      return res.status(403).json({ success: false, message: 'لا يمكن تعديل الزيارة بعد مرور 24 ساعة على تسجيلها' });
+    }
+  }
+
   const updatedVisit = await Visit.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
   res.status(200).json({ success: true, data: updatedVisit });
 });
