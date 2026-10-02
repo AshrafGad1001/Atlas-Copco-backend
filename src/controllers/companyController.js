@@ -20,6 +20,10 @@ exports.createCompany = asyncHandler(async (req, res) => {
 
 exports.getCompanies = asyncHandler(async (req, res) => {
   const filter = {};
+  if (req.query.search) {
+    const normalize = (t) => t.trim().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').toLowerCase();
+    filter.normalizedName = { $regex: normalize(req.query.search), $options: 'i' };
+  }
   if (req.user.role === 'engineer') {
     filter.region = req.user.region;
   } else if (req.query.region) {
