@@ -16,6 +16,8 @@ const visitSchema = new mongoose.Schema({
     default: Date.now,
     required: [true, 'تاريخ الزيارة مطلوب']
   },
+  type: { type: String, trim: true },
+  nextStep: { type: String, trim: true },
   notes: {
     type: String,
     trim: true,

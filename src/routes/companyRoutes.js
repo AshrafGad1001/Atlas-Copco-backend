@@ -1,5 +1,5 @@
 const express = require('express');
-const { createCompany, getCompanies, updateCompany, deleteCompany, companySchema, getCompanyAttendees } = require('../controllers/companyController');
+const { createCompany, getCompanies, updateCompany, deleteCompany, companySchema, getCompanyAttendees, getCompanyHistory } = require('../controllers/companyController');
 const { protect } = require('../middlewares/authMiddleware');
 const validate = require('../middlewares/validate');
 
@@ -13,6 +13,9 @@ router.route('/')
 
 router.route('/:id/attendees')
   .get(getCompanyAttendees);
+
+router.route('/:id/history')
+  .get(getCompanyHistory);
 
 router.route('/:id')
   .put(validate(companySchema), updateCompany)

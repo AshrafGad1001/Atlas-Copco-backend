@@ -5,7 +5,9 @@ const asyncHandler = require('../utils/asyncHandler');
 exports.visitSchema = z.object({
   company: z.string().min(1, 'الشركة مطلوبة'),
   visitDate: z.string().optional(),
+  type: z.string().optional(),
   notes: z.string().optional(),
+  nextStep: z.string().optional(),
   status: z.enum(['planned', 'completed', 'cancelled']).optional(),
   attendees: z.array(z.object({
     name: z.string().min(2, 'الاسم مطلوب').max(100),
