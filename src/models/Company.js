@@ -15,10 +15,6 @@ const companySchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  contactPerson: {
-    type: String,
-    trim: true,
-  },
   phones: [{
     number: {
       type: String,

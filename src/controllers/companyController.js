@@ -6,7 +6,6 @@ exports.companySchema = z.object({
   name: z.string().min(2, 'اسم الشركة مطلوب'),
   region: z.string().min(1, 'المنطقة مطلوبة'),
   address: z.string().optional(),
-  contactPerson: z.string().optional(),
   phones: z.array(z.object({ number: z.string() })).optional()
 });
 

@@ -6,7 +6,12 @@ exports.visitSchema = z.object({
   company: z.string().min(1, 'الشركة مطلوبة'),
   visitDate: z.string().optional(),
   notes: z.string().optional(),
-  status: z.enum(['planned', 'completed', 'cancelled']).optional()
+  status: z.enum(['planned', 'completed', 'cancelled']).optional(),
+  attendees: z.array(z.object({
+    name: z.string().min(2, 'الاسم مطلوب').max(100),
+    jobTitle: z.string().max(100).optional(),
+    phone: z.string().regex(/^[0-9+]{8,15}$/, 'الموبايل غير صالح').optional().or(z.literal(''))
+  })).max(10, 'الحد الأقصى 10 أشخاص').optional()
 });
 
 exports.createVisit = asyncHandler(async (req, res) => {
