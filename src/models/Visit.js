@@ -29,7 +29,8 @@ const visitSchema = new mongoose.Schema({
     name: { type: String, required: [true, 'اسم الحاضر مطلوب'], minlength: 2, maxlength: 100, trim: true },
     jobTitle: { type: String, maxlength: 100, trim: true },
     phone: { type: String, match: [/^[0-9+]{8,15}$/, 'رقم الموبايل غير صالح'], trim: true }
-  }]
+  }],
+  isDeleted: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Visit', visitSchema);
