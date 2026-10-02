@@ -38,9 +38,13 @@ app.use('/api/auth', authRoutes);
 const regionRoutes = require('./src/routes/regionRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const profileRoutes = require('./src/routes/profileRoutes');
+const companyRoutes = require('./src/routes/companyRoutes');
+const visitRoutes = require('./src/routes/visitRoutes');
 app.use('/api/regions', regionRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/companies', companyRoutes);
+app.use('/api/visits', visitRoutes);
 
 // Error Handling Middlewares
 app.use(notFound);

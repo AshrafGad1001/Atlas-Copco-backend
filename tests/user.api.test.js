@@ -6,7 +6,7 @@ describe('User API Endpoints', () => {
   let adminToken;
   let userId;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const adminUser = await User.create({
       fullName: 'Admin',
       username: 'admin2',
@@ -29,6 +29,9 @@ describe('User API Endpoints', () => {
   });
 
   it('should create an engineer', async () => {
+    const Region = require('../src/models/Region');
+    const region = await Region.create({ name: 'Test Region' });
+
     const res = await request(app)
       .post('/api/users')
       .set('Cookie', [`token=${adminToken}`])
@@ -38,20 +41,35 @@ describe('User API Endpoints', () => {
         email: 'eng3@test.com',
         role: 'engineer',
         password: 'password123',
+        region: region._id,
         phones: [{ number: '01012345678' }]
       });
     
     expect(res.statusCode).toBe(201);
-    userId = res.body.data._id;
   });
 
   it('should update user', async () => {
+    const Region = require('../src/models/Region');
+    const region = await Region.create({ name: 'Test Region 2' });
+    
+    const eng = await User.create({
+      fullName: 'Eng', 
+      username: 'eng4', 
+      email: 'eng4@test.com',
+      role: 'engineer',
+      password: 'password123',
+      region: region._id,
+      phones: [{ number: '01012345678' }]
+    });
+
     const res = await request(app)
-      .put(`/api/users/${userId}`)
+      .put(`/api/users/${eng._id}`)
       .set('Cookie', [`token=${adminToken}`])
       .send({ 
         fullName: 'Eng Updated',
-        username: 'eng3'
+        username: 'eng4',
+        email: 'eng4@test.com',
+        role: 'engineer',
       });
     
     expect(res.statusCode).toBe(200);

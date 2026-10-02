@@ -7,7 +7,7 @@ describe('Region API Endpoints', () => {
   let adminToken;
   let regionId;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const adminUser = await User.create({
       fullName: 'Admin',
       username: 'admin',
@@ -38,10 +38,10 @@ describe('Region API Endpoints', () => {
     
     expect(res.statusCode).toBe(201);
     expect(res.body.success).toBe(true);
-    regionId = res.body.data._id;
   });
 
   it('should get all regions', async () => {
+    await Region.create({ name: 'Alex' });
     const res = await request(app)
       .get('/api/regions')
       .set('Cookie', [`token=${adminToken}`]);
@@ -51,8 +51,9 @@ describe('Region API Endpoints', () => {
   });
 
   it('should update a region', async () => {
+    const region = await Region.create({ name: 'Old Name' });
     const res = await request(app)
-      .put(`/api/regions/${regionId}`)
+      .put(`/api/regions/${region._id}`)
       .set('Cookie', [`token=${adminToken}`])
       .send({ name: 'Giza' });
     
@@ -61,18 +62,19 @@ describe('Region API Endpoints', () => {
   });
 
   it('should not delete region with users', async () => {
+    const region = await Region.create({ name: 'Used Region' });
     await User.create({
       fullName: 'Eng',
-      username: 'eng',
-      email: 'eng@test.com',
+      username: 'eng.region',
+      email: 'eng.reg@test.com',
       role: 'engineer',
       password: 'password123',
-      region: regionId,
+      region: region._id,
       phones: [{ number: '01012345678' }]
     });
 
     const res = await request(app)
-      .delete(`/api/regions/${regionId}`)
+      .delete(`/api/regions/${region._id}`)
       .set('Cookie', [`token=${adminToken}`]);
     
     expect(res.statusCode).toBe(400);
