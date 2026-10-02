@@ -35,6 +35,12 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+const regionRoutes = require('./src/routes/regionRoutes');
+const userRoutes = require('./src/routes/userRoutes');
+const profileRoutes = require('./src/routes/profileRoutes');
+app.use('/api/regions', regionRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Error Handling Middlewares
 app.use(notFound);
