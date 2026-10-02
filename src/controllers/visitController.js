@@ -17,26 +17,35 @@ exports.visitSchema = z.object({
 });
 
 exports.createVisit = asyncHandler(async (req, res) => {
-  const visitData = {
-    ...req.body,
-    engineer: req.user._id // Ensure the engineer is the logged-in user
-  };
+  if (req.user.role === 'engineer') {
+    req.body.engineer = req.user._id;
+  }
+  
+  const Company = require('../models/Company');
+  const company = await Company.findById(req.body.company);
+  if (!company) return res.status(404).json({ success: false, message: 'الشركة غير موجودة' });
+  
+  if (req.user.role === 'engineer' && company.region.toString() !== req.user.region.toString()) {
+    return res.status(403).json({ success: false, message: 'غير مصرح' });
+  }
+
+  const visitData = { ...req.body };
   const visit = await Visit.create(visitData);
   res.status(201).json({ success: true, data: visit });
 });
 
 exports.getVisits = asyncHandler(async (req, res) => {
-  const filter = {};
+  const filter = { isDeleted: { $ne: true } };
+  
   if (req.user.role === 'engineer') {
     filter.engineer = req.user._id;
   }
-  if (req.query.engineerId && req.user.role === 'admin') {
-    filter.engineer = req.query.engineerId;
-  }
   
+  if (req.query.company) filter.company = req.query.company;
+
   const visits = await Visit.find(filter)
-    .populate('company', 'name region')
-    .populate('engineer', 'fullName username')
+    .populate('company', 'name')
+    .populate('engineer', 'fullName')
     .sort('-visitDate');
     
   res.status(200).json({ success: true, data: visits });
@@ -67,14 +76,15 @@ exports.updateVisit = asyncHandler(async (req, res) => {
 
 exports.deleteVisit = asyncHandler(async (req, res) => {
   const visit = await Visit.findById(req.params.id);
-  if (!visit) {
+  if (!visit || visit.isDeleted) {
     return res.status(404).json({ success: false, message: 'الزيارة غير موجودة' });
   }
-
+  
   if (req.user.role === 'engineer' && visit.engineer.toString() !== req.user._id.toString()) {
-    return res.status(403).json({ success: false, message: 'غير مصرح لك بحذف هذه الزيارة' });
+    return res.status(403).json({ success: false, message: 'غير مصرح' });
   }
 
-  await visit.deleteOne();
-  res.status(200).json({ success: true, message: 'تم حذف الزيارة' });
+  visit.isDeleted = true;
+  await visit.save();
+  res.status(200).json({ success: true, message: 'تم الحذف بنجاح' });
 });

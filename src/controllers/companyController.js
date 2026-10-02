@@ -11,15 +11,18 @@ exports.companySchema = z.object({
 });
 
 exports.createCompany = asyncHandler(async (req, res) => {
+  if (req.user.role === 'engineer') {
+    req.body.region = req.user.region;
+  }
   const company = await Company.create(req.body);
   res.status(201).json({ success: true, data: company });
 });
 
 exports.getCompanies = asyncHandler(async (req, res) => {
-  // If engineer, they might want to see companies in their region only, 
-  // but let's just allow filtering by region
   const filter = {};
-  if (req.query.region) {
+  if (req.user.role === 'engineer') {
+    filter.region = req.user.region;
+  } else if (req.query.region) {
     filter.region = req.query.region;
   }
   const companies = await Company.find(filter).populate('region', 'name');
@@ -27,17 +30,28 @@ exports.getCompanies = asyncHandler(async (req, res) => {
 });
 
 exports.updateCompany = asyncHandler(async (req, res) => {
-  const company = await Company.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+  const company = await Company.findById(req.params.id);
   if (!company) {
     return res.status(404).json({ success: false, message: 'الشركة غير موجودة' });
   }
-  res.status(200).json({ success: true, data: company });
+  if (req.user.role === 'engineer') {
+    if (company.region.toString() !== req.user.region.toString()) {
+      return res.status(403).json({ success: false, message: 'غير مصرح' });
+    }
+    req.body.region = req.user.region;
+  }
+  
+  const updated = await Company.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+  res.status(200).json({ success: true, data: updated });
 });
 
 exports.deleteCompany = asyncHandler(async (req, res) => {
   const company = await Company.findById(req.params.id);
   if (!company) {
     return res.status(404).json({ success: false, message: 'الشركة غير موجودة' });
+  }
+  if (req.user.role === 'engineer' && company.region.toString() !== req.user.region.toString()) {
+    return res.status(403).json({ success: false, message: 'غير مصرح' });
   }
   await company.deleteOne();
   res.status(200).json({ success: true, message: 'تم الحذف' });
