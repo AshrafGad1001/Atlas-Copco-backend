@@ -40,6 +40,16 @@ describe('Region API Endpoints', () => {
     expect(res.body.success).toBe(true);
   });
 
+  it('should return 400 for missing name', async () => {
+    const res = await request(app)
+      .post('/api/regions')
+      .set('Cookie', [`token=${adminToken}`])
+      .send({});
+    
+    expect(res.statusCode).toBe(400);
+    expect(res.body.errors[0].field).toBe('name');
+  });
+
   it('should get all regions', async () => {
     await Region.create({ name: 'Alex' });
     const res = await request(app)
