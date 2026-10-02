@@ -1,33 +1,24 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
+const { assertSafeTestUri } = require('./testGuard');
 
 beforeAll(async () => {
   const { MONGO_URI_TEST, MONGO_URI } = process.env;
-
-  if (!MONGO_URI_TEST) {
-    throw new Error('MONGO_URI_TEST is not defined in .env');
-  }
-
-  if (MONGO_URI_TEST === MONGO_URI) {
-    throw new Error('MONGO_URI_TEST must be different from MONGO_URI to prevent data loss');
-  }
-
-  if (!MONGO_URI_TEST.toLowerCase().includes('test')) {
-    throw new Error('MONGO_URI_TEST must contain the word "test" in the database name');
-  }
+  
+  assertSafeTestUri(MONGO_URI_TEST, MONGO_URI);
 
   await mongoose.connect(MONGO_URI_TEST);
 });
 
 afterAll(async () => {
-  if (mongoose.connection.readyState === 1) {
+  if (mongoose.connection.readyState !== 0) {
     await mongoose.connection.dropDatabase();
     await mongoose.connection.close();
   }
 });
 
 afterEach(async () => {
-  if (mongoose.connection.readyState === 1) {
+  if (mongoose.connection.readyState !== 0) {
     const collections = mongoose.connection.collections;
     for (const key in collections) {
       await collections[key].deleteMany();
