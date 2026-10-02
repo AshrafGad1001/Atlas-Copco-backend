@@ -40,11 +40,14 @@ const userRoutes = require('./src/routes/userRoutes');
 const profileRoutes = require('./src/routes/profileRoutes');
 const companyRoutes = require('./src/routes/companyRoutes');
 const visitRoutes = require('./src/routes/visitRoutes');
+const reportRoutes = require('./src/routes/reportRoutes');
+
 app.use('/api/regions', regionRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/visits', visitRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Error Handling Middlewares
 app.use(notFound);
