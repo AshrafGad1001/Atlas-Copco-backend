@@ -287,9 +287,7 @@ exports.getCompanyAttendees = asyncHandler(async (req, res) => {
   }
 
   // Find all visits for this company
-  const visits = await Visit.find({ company: company._id, status: { $ne: 'cancelled' } }) // non-deleted? Wait, Visits don't have isDeleted, maybe status! Wait, "غير المحذوفة". I don't have soft delete yet, but I'll add it in A7 or A4. Let's just do visits for now. 
-    .sort('-visitDate')
-    .lean();
+  const visits = await Visit.find({ company: company._id, isDeleted: false }).sort("-visitDate").lean();
     
   const uniqueAttendeesMap = new Map();
   
@@ -328,7 +326,7 @@ exports.getCompanyHistory = asyncHandler(async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 20;
   const skip = (page - 1) * limit;
 
-  const visits = await Visit.find({ company: company._id, isDeleted: { $ne: true } })
+  const visits = await Visit.find({ company: company._id, isDeleted: false })
     .sort('-visitDate')
     .skip(skip)
     .limit(limit)
