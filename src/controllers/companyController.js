@@ -51,7 +51,11 @@ exports.importCompanies = asyncHandler(async (req, res) => {
   if (req.file.size > 2 * 1024 * 1024) return res.status(400).json({ success: false, message: "\u0627\u0644\u0645\u0644\u0641 \u0623\u0643\u0628\u0631 \u0645\u0646 2 \u0645\u064a\u062c\u0627" });
 
   const workbook = new exceljs.Workbook();
-  await workbook.xlsx.readFile(req.file.path);
+  try {
+    await workbook.xlsx.readFile(req.file.path);
+  } catch (e) {
+    return res.status(400).json({ success: false, message: "\u0645\u0644\u0641 \u0628\u0627\u064a\u0638" });
+  }
   const sheet = workbook.worksheets[0];
   if (!sheet) return res.status(400).json({ success: false, message: "\u0627\u0644\u0645\u0644\u0641 \u0641\u0627\u0631\u063a" });
 
@@ -64,6 +68,7 @@ exports.importCompanies = asyncHandler(async (req, res) => {
 
   const toInsert = [];
   let ignored = 0;
+  const errors = [];
   
   const inMemorySetAr = new Set();
   const inMemorySetEn = new Set();
@@ -81,7 +86,13 @@ exports.importCompanies = asyncHandler(async (req, res) => {
     const notes = row.getCell(6).text?.trim();
 
     if (!nameAr && !nameEn) { ignored++; continue; }
-    if (!regionName || !regionMap[regionName]) { ignored++; continue; }
+    if (!regionName || !regionMap[regionName]) { 
+  ignored++; 
+  if (regionName && !regionMap[regionName]) {
+    errors.push({ field: "Row " + i, message: "\u0627\u0644\u0645\u0646\u0637\u0642\u0629 \u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f\u0629: " + regionName });
+  }
+  continue; 
+}
 
     const regionId = regionMap[regionName];
     const nameArNorm = nameAr ? normalizeName(nameAr) : "";
@@ -109,7 +120,7 @@ exports.importCompanies = asyncHandler(async (req, res) => {
   if (req.body.dryRun === "true") {
     const fs = require("fs");
     fs.unlinkSync(req.file.path);
-    return res.status(200).json({ success: true, data: { added: toInsert.length, ignored } });
+    return res.status(200).json({ success: true, data: { added: toInsert.length, ignored }, errors });
   }
 
   if (toInsert.length > 0) {
@@ -120,7 +131,7 @@ exports.importCompanies = asyncHandler(async (req, res) => {
   const fs = require("fs");
   fs.unlinkSync(req.file.path);
 
-  res.status(200).json({ success: true, data: { added: toInsert.length, ignored } });
+  res.status(200).json({ success: true, data: { added: toInsert.length, ignored }, errors });
 });
 
 exports.companySchema = baseSchema.refine(data => data.nameAr || data.nameEn, {
