@@ -109,7 +109,9 @@ describe('Company API Tests', () => {
 
     it("should return 403 for GET history, PUT, DELETE from other region engineer, but 200 for admin", async () => {
       // 1. GET history (as a proxy for GET)
-      const resGet = await request(app).get("/api/companies/" + companyId + "/history").set("Cookie", [`token=${otherEngToken}`]);
+      const resGet = await request(app).get("/api/companies/" + companyId).set("Cookie", [`token=${otherEngToken}`]);
+      expect(resGet.statusCode).toBe(403);
+      const resGetHist = await request(app).get("/api/companies/" + companyId + "/history").set("Cookie", [`token=${otherEngToken}`]);
       expect(resGet.statusCode).toBe(403);
 
       // 2. PUT (update)
