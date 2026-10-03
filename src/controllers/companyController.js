@@ -12,6 +12,35 @@ const baseSchema = z.object({
   notes: z.string().optional(),
   isDeleted: z.boolean().optional(),
 });
+
+exports.mergeCompanies = asyncHandler(async (req, res) => {
+  const targetId = req.params.id;
+  const { sourceIds } = req.body;
+  if (!Array.isArray(sourceIds) || sourceIds.length === 0) {
+    return res.status(400).json({ success: false, message: "sourceIds is required" });
+  }
+
+  const target = await Company.findById(targetId);
+  if (!target) return res.status(404).json({ success: false, message: "\u0627\u0644\u0634\u0631\u0643\u0629 \u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f\u0629" });
+
+  const sources = await Company.find({ _id: { $in: sourceIds } });
+
+  for (const source of sources) {
+    if (!target.nameEn && source.nameEn) target.nameEn = source.nameEn;
+    if (!target.address && source.address) target.address = source.address;
+    if (!target.industry && source.industry) target.industry = source.industry;
+    if (!target.notes && source.notes) target.notes = source.notes;
+    
+    source.isDeleted = true;
+    await source.save();
+  }
+  
+  await target.save();
+  await Visit.updateMany({ company: { $in: sourceIds } }, { $set: { company: target._id } });
+
+  res.status(200).json({ success: true, data: target, message: "\u062a\u0645 \u0627\u0644\u062f\u0645\u062c \u0628\u0646\u062c\u0627\u062d" });
+});
+
 exports.companySchema = baseSchema.refine(data => data.nameAr || data.nameEn, {
   message: "\u064a\u062c\u0628 \u0625\u062f\u062e\u0627\u0644 \u0627\u0644\u0627\u0633\u0645 \u0628\u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0623\u0648 \u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629",
   path: ["nameAr"]

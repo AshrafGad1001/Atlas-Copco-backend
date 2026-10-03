@@ -1,6 +1,6 @@
 
 const express = require("express");
-const { createCompany, getCompanies, updateCompany, deleteCompany, companySchema, updateCompanySchema, getCompanyAttendees, getCompanyHistory } = require("../controllers/companyController");
+const { createCompany, getCompanies, updateCompany, deleteCompany, companySchema, updateCompanySchema, getCompanyAttendees, getCompanyHistory, mergeCompanies } = require("../controllers/companyController");
 const { protect } = require("../middlewares/authMiddleware");
 const validate = require("../middlewares/validate");
 
@@ -22,4 +22,9 @@ router.route("/:id")
   .patch(validate(updateCompanySchema), updateCompany)
   .delete(deleteCompany);
 
+
+router.route("/:id/merge")
+  .post(require("../middlewares/authMiddleware").restrictTo("admin"), mergeCompanies);
+
 module.exports = router;
+
