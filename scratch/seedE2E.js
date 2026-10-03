@@ -1,49 +1,18 @@
-require('dotenv').config();
-const mongoose = require('mongoose');
-const User = require('./src/models/User');
-const Region = require('./src/models/Region');
-const connectDB = require('./src/config/db');
-const { assertSafeTestUri } = require('./tests/testGuard');
 
-const seed = async () => {
-  process.env.NODE_ENV = 'test';
+    const mongoose = require("mongoose");
+    const User = require("../src/models/User");
+    const Region = require("../src/models/Region");
+    mongoose.connect(process.env.MONGO_URI_TEST).then(async () => {
+      await mongoose.connection.db.dropDatabase();
+      const reg1 = await Region.create({ name: "Region 1" });
+      const reg2 = await Region.create({ name: "Region 2" });
+      await User.create({ fullName: "Admin User", username: "admin", email: "admin@t.com", password: "Admin12345", role: "admin", phones: [{number: "01000000000"}] });
+      await User.create({ fullName: "Eng One", username: "ashraf123", email: "eng1@t.com", password: "password@123", role: "engineer", region: reg1._id, phones: [{number: "01011111111"}] });
+      await User.create({ fullName: "Visit Eng", username: "visitEng", email: "veng@t.com", password: "password@123", role: "engineer", region: reg1._id, phones: [{number: "01011111112"}] });
+      await User.create({ fullName: "Eng Two", username: "eng2", email: "eng2@t.com", password: "password@123", role: "engineer", region: reg2._id, phones: [{number: "01022222222"}] });
+      const Company = require("../src/models/Company");
+      await Company.create({ name: "Test Company 1", region: reg1._id, phone: "01000000000", isClient: true });
+      console.log("Seeded");
+      process.exit(0);
+    });
   
-  // Guard
-  assertSafeTestUri(process.env.MONGO_URI_TEST, process.env.MONGO_URI);
-
-  await connectDB();
-  
-  // Clean DB
-  await User.deleteMany();
-  await Region.deleteMany();
-  
-  const admin = await User.create({
-    fullName: 'Admin User',
-    username: 'admin',
-    email: 'admin@example.com',
-    password: 'Admin12345',
-    role: 'admin',
-    isActive: true
-  });
-  
-  const region = await Region.create({
-    name: 'Cairo',
-    isActive: true
-  });
-  
-  const engineer = await User.create({
-    fullName: 'Eng Ashraf',
-    username: 'ashraf123',
-    email: 'ashraf@example.com',
-    password: 'password@123',
-    role: 'engineer',
-    region: region._id,
-    isActive: true,
-    phones: [{ number: '01012345678', isPrimary: true }]
-  });
-  
-  console.log('Test DB Seeded!');
-  process.exit(0);
-};
-
-seed();

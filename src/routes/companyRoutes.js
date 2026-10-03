@@ -9,7 +9,12 @@ const router = express.Router();
 router.use(protect);
 
 router.route("/")
-  .post(validate(companySchema), createCompany)
+  .post((req, res, next) => {
+    if (req.user && req.user.role === "engineer") {
+      req.body.region = req.user.region.toString();
+    }
+    next();
+  }, validate(companySchema), createCompany)
   .get(getCompanies);
 
 router.route("/:id/attendees")
@@ -19,7 +24,12 @@ router.route("/:id/history")
   .get(getCompanyHistory);
 
 router.route("/:id")
-  .patch(validate(updateCompanySchema), updateCompany)
+  .patch((req, res, next) => {
+    if (req.user && req.user.role === "engineer") {
+      delete req.body.region;
+    }
+    next();
+  }, validate(updateCompanySchema), updateCompany)
   .delete(deleteCompany);
 
 
