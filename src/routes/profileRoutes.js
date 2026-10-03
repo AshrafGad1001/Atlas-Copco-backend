@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.use(protect);
 
-router.put('/update-profile', validate(updateProfileSchema), updateProfile);
+router.patch('/', validate(updateProfileSchema), updateProfile);
 router.put('/update-password', validate(updatePasswordSchema), updatePassword);
 
 module.exports = router;

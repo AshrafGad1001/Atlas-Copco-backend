@@ -8,6 +8,8 @@ describe('Region API Endpoints', () => {
   let regionId;
 
   beforeEach(async () => {
+    await User.deleteMany();
+    await Region.deleteMany();
     const adminUser = await User.create({
       fullName: 'Admin',
       username: 'admin',

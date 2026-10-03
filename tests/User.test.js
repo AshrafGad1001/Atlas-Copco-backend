@@ -6,6 +6,8 @@ describe('User Model Test', () => {
   let regionId;
 
   beforeEach(async () => {
+    await User.deleteMany();
+    await Region.deleteMany();
     const region = await Region.create({ name: 'Giza' });
     regionId = region._id;
   });

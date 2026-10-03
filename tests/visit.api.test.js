@@ -7,21 +7,28 @@ const Company = require('../src/models/Company');
 const Visit = require('../src/models/Visit');
 
 describe('Visit API Tests', () => {
-  let adminToken, engToken, eng2Token, engRegionId, otherRegionId;
-  let compEng, compOther, engUser, eng2User;
+  let adminToken, engToken, eng2Token, eng3Token, engRegionId, otherRegionId;
+  let compEng, compOther, engUser, eng2User, eng3User;
   
   beforeEach(async () => {
+    await User.deleteMany();
+    await Region.deleteMany();
+    await Company.deleteMany();
+    await Visit.deleteMany();
     const reg1 = await Region.create({ name: 'Region 1' });
     const reg2 = await Region.create({ name: 'Region 2' });
     engRegionId = reg1._id;
     otherRegionId = reg2._id;
 
     engUser = await User.create({ fullName: 'Eng1', username: 'eng1', email: 'e1@t.com', password: 'password123', role: 'engineer', region: engRegionId, phones: [{number: '01011111111'}] });
+    eng3User = await User.create({ fullName: 'Eng3', username: 'eng3', email: 'e3@t.com', password: 'password123', role: 'engineer', region: engRegionId, phones: [{number: '01033333331'}] }); // Same region
     eng2User = await User.create({ fullName: 'Eng2', username: 'eng2', email: 'e2@t.com', password: 'password123', role: 'engineer', region: otherRegionId, phones: [{number: '01022222222'}] });
     const admin = await User.create({ fullName: 'Admin', username: 'admin', email: 'a@t.com', password: 'password123', role: 'admin', phones: [{number: '01033333333'}] });
 
     const l1 = await request(app).post('/api/auth/login').send({ username: 'eng1', password: 'password123' });
     engToken = l1.headers['set-cookie'][0].split(';')[0].split('=')[1];
+    const l3 = await request(app).post('/api/auth/login').send({ username: 'eng3', password: 'password123' });
+    eng3Token = l3.headers['set-cookie'][0].split(';')[0].split('=')[1];
     const l2 = await request(app).post('/api/auth/login').send({ username: 'eng2', password: 'password123' });
     eng2Token = l2.headers['set-cookie'][0].split(';')[0].split('=')[1];
     const la = await request(app).post('/api/auth/login').send({ username: 'admin', password: 'password123' });
@@ -43,9 +50,9 @@ describe('Visit API Tests', () => {
     expect(res.statusCode).toBe(403);
   });
 
-  it('updating visit of another engineer = 403', async () => {
-    const visit = await Visit.create({ company: compOther._id, engineer: eng2User._id });
-    const res = await request(app).put(`/api/visits/${visit._id}`).set('Cookie', [`token=${engToken}`]).send({ company: compOther._id, notes: 'test' });
+  it('updating visit of another engineer = 403 (even in same region)', async () => {
+    const visit = await Visit.create({ company: compEng._id, engineer: engUser._id });
+    const res = await request(app).put(`/api/visits/${visit._id}`).set('Cookie', [`token=${eng3Token}`]).send({ company: compEng._id, notes: 'test' });
     expect(res.statusCode).toBe(403);
   });
 
@@ -73,6 +80,7 @@ describe('Visit API Tests', () => {
 
     const res2 = await request(app).post('/api/visits').set('Cookie', [`token=${engToken}`]).send({ company: compEng._id, attendees: [{}] });
     expect(res2.statusCode).toBe(400); // Validation error (Zod: name is required)
+    expect(res2.body.errors[0].field).toBe('attendees.0.name');
     
     const res3 = await request(app).post('/api/visits').set('Cookie', [`token=${engToken}`]).send({ company: compEng._id, attendees: [{name: 'Ashraf', phone: '01012345678'}] });
     expect(res3.statusCode).toBe(201);

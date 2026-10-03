@@ -23,6 +23,7 @@ describe('Region Model Test', () => {
   });
 
   it('should fail if name is duplicate', async () => {
+    await Region.createIndexes();
     await new Region({ name: 'Alexandria' }).save();
     const duplicateRegion = new Region({ name: 'Alexandria' });
     let err;

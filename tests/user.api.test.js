@@ -7,6 +7,7 @@ describe('User API Endpoints', () => {
   let userId;
 
   beforeEach(async () => {
+    await User.deleteMany();
     const adminUser = await User.create({
       fullName: 'Admin',
       username: 'admin2',
