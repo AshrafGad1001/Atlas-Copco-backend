@@ -3,11 +3,26 @@ const Company = require('../models/Company');
 const Visit = require('../models/Visit');
 const asyncHandler = require('../utils/asyncHandler');
 
-exports.companySchema = z.object({
-  name: z.string().min(2, 'اسم الشركة مطلوب'),
-  region: z.string().min(1, 'المنطقة مطلوبة'),
+const baseSchema = z.object({
+  nameAr: z.string().optional(),
+  nameEn: z.string().optional(),
+  region: z.string().min(1, "\u0627\u0644\u0645\u0646\u0637\u0642\u0629 \u0645\u0637\u0644\u0648\u0628\u0629"),
   address: z.string().optional(),
-  phones: z.array(z.object({ number: z.string() })).optional()
+  industry: z.string().optional(),
+  notes: z.string().optional(),
+});
+exports.companySchema = baseSchema.refine(data => data.nameAr || data.nameEn, {
+  message: "\u064a\u062c\u0628 \u0625\u062f\u062e\u0627\u0644 \u0627\u0644\u0627\u0633\u0645 \u0628\u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0623\u0648 \u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629",
+  path: ["nameAr"]
+});
+exports.updateCompanySchema = baseSchema.partial().refine(data => {
+  if (data.nameAr !== undefined || data.nameEn !== undefined) {
+    return data.nameAr || data.nameEn;
+  }
+  return true;
+}, {
+  message: "\u064a\u062c\u0628 \u0625\u062f\u062e\u0627\u0644 \u0627\u0644\u0627\u0633\u0645",
+  path: ["nameAr"]
 });
 
 exports.createCompany = asyncHandler(async (req, res) => {
@@ -45,7 +60,8 @@ exports.updateCompany = asyncHandler(async (req, res) => {
     req.body.region = req.user.region;
   }
   
-  const updated = await Company.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+  Object.assign(company, req.body);
+  const updated = await company.save();
   res.status(200).json({ success: true, data: updated });
 });
 
