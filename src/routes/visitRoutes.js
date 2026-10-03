@@ -1,5 +1,5 @@
 const express = require('express');
-const { createVisit, getVisits, updateVisit, deleteVisit, visitSchema } = require('../controllers/visitController');
+const { createVisit, getVisits, getVisit, updateVisit, deleteVisit, visitSchema } = require('../controllers/visitController');
 const { protect } = require('../middlewares/authMiddleware');
 const validate = require('../middlewares/validate');
 
@@ -9,10 +9,13 @@ router.use(protect);
 
 router.route('/')
   .post(validate(visitSchema), createVisit)
-  .get(getVisits);
+  
+
+router.get('/mine', getVisits);
 
 router.route('/:id')
-  .put(validate(visitSchema), updateVisit)
+  .get(getVisit)
+  .patch(validate(visitSchema), updateVisit)
   .delete(deleteVisit);
 
 module.exports = router;
