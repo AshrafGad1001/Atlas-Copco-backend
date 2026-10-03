@@ -27,11 +27,14 @@ const visitSchema = new mongoose.Schema({
     enum: ['planned', 'completed', 'cancelled'],
     default: 'completed'
   },
-  attendees: [{
+  attendees: {
+    type: [{
     name: { type: String, required: [true, 'اسم الحاضر مطلوب'], minlength: 2, maxlength: 100, trim: true },
     jobTitle: { type: String, maxlength: 100, trim: true },
     phone: { type: String, match: [/^[0-9+]{8,15}$/, 'رقم الموبايل غير صالح'], trim: true }
   }],
+    validate: [v => v.length <= 10, "???? ?????? 10 ??????"]
+  },
   isDeleted: { type: Boolean, default: false },
   deletedAt: Date,
   deletedBy: { type: mongoose.Schema.ObjectId, ref: "User" },
