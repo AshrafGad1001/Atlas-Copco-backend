@@ -32,7 +32,20 @@ const visitSchema = new mongoose.Schema({
     jobTitle: { type: String, maxlength: 100, trim: true },
     phone: { type: String, match: [/^[0-9+]{8,15}$/, 'رقم الموبايل غير صالح'], trim: true }
   }],
-  isDeleted: { type: Boolean, default: false }
+  isDeleted: { type: Boolean, default: false },
+  deletedAt: Date,
+  deletedBy: { type: mongoose.Schema.ObjectId, ref: "User" },
+  editHistory: [{
+    _id: false,
+    editedBy: { type: mongoose.Schema.ObjectId, ref: "User" },
+    editedAt: { type: Date, default: Date.now },
+    changes: [{
+      _id: false,
+      field: String,
+      from: String,
+      to: String
+    }]
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Visit', visitSchema);

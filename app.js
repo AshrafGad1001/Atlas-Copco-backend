@@ -48,6 +48,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/admin/companies', require('./src/routes/adminCompanyRoutes'));
 app.use('/api/visits', visitRoutes);
+app.use('/api/admin/visits', require('./src/routes/adminVisitRoutes'));
 app.use('/api/reports', reportRoutes);
 
 // Error Handling Middlewares
