@@ -10,6 +10,7 @@ const baseSchema = z.object({
   address: z.string().optional(),
   industry: z.string().optional(),
   notes: z.string().optional(),
+  isDeleted: z.boolean().optional(),
 });
 exports.companySchema = baseSchema.refine(data => data.nameAr || data.nameEn, {
   message: "\u064a\u062c\u0628 \u0625\u062f\u062e\u0627\u0644 \u0627\u0644\u0627\u0633\u0645 \u0628\u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0623\u0648 \u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629",
@@ -110,24 +111,25 @@ exports.getCompanies = asyncHandler(async (req, res) => {
 exports.updateCompany = asyncHandler(async (req, res) => {
   const company = await Company.findById(req.params.id);
   if (!company) {
-    return res.status(404).json({ success: false, message: 'الشركة غير موجودة' });
+    return res.status(404).json({ success: false, message: "\u0627\u0644\u0634\u0631\u0643\u0629 \u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f\u0629" });
   }
-  if (req.user.role === 'engineer') {
+  if (req.user.role === "engineer") {
     if (company.region.toString() !== req.user.region.toString()) {
-      return res.status(403).json({ success: false, message: 'غير مصرح' });
+      return res.status(403).json({ success: false, message: "\u063a\u064a\u0631 \u0645\u0635\u0631\u062d" });
     }
-    req.body.region = req.user.region;
+    if (req.body.isDeleted !== undefined) {
+      return res.status(403).json({ success: false, message: "\u063a\u064a\u0631 \u0645\u0635\u0631\u062d" });
+    }
+    delete req.body.region;
   }
-  
   
   const newNameAr = req.body.nameAr !== undefined ? req.body.nameAr : company.nameAr;
   const newNameEn = req.body.nameEn !== undefined ? req.body.nameEn : company.nameEn;
-  const dupCheck = await checkDuplicatesLogic(newNameAr, newNameEn, company.region, company._id, req.query.confirmSimilar, Company);
+  const dupCheck = await checkDuplicatesLogic(newNameAr, newNameEn, req.body.region || company.region, company._id, req.query.confirmSimilar, Company);
   if (dupCheck) {
     return res.status(409).json({ success: false, message: dupCheck.code === "DUPLICATE" ? "\u0634\u0631\u0643\u0629 \u0645\u0643\u0631\u0631\u0629" : "\u0634\u0631\u0643\u0629 \u0645\u0634\u0627\u0628\u0647\u0629 \u0645\u0648\u062c\u0648\u062f\u0629", code: dupCheck.code, data: dupCheck.company });
   }
   Object.assign(company, req.body);
-
   const updated = await company.save();
   res.status(200).json({ success: true, data: updated });
 });
@@ -135,14 +137,16 @@ exports.updateCompany = asyncHandler(async (req, res) => {
 exports.deleteCompany = asyncHandler(async (req, res) => {
   const company = await Company.findById(req.params.id);
   if (!company) {
-    return res.status(404).json({ success: false, message: 'الشركة غير موجودة' });
+    return res.status(404).json({ success: false, message: "\u0627\u0644\u0634\u0631\u0643\u0629 \u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f\u0629" });
   }
-  if (req.user.role === 'engineer' && company.region.toString() !== req.user.region.toString()) {
-    return res.status(403).json({ success: false, message: 'غير مصرح' });
+  if (req.user.role === "engineer") {
+    return res.status(403).json({ success: false, message: "\u063a\u064a\u0631 \u0645\u0635\u0631\u062d" });
   }
-  await company.deleteOne();
-  res.status(200).json({ success: true, message: 'تم الحذف' });
+  company.isDeleted = true;
+  await company.save();
+  res.status(200).json({ success: true, message: "\u062a\u0645 \u0627\u0644\u062d\u0630\u0641" });
 });
+
 const normalizeArabic = (text) => {
   if (!text) return '';
   return text
