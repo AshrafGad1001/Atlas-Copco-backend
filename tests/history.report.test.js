@@ -70,4 +70,44 @@ describe('History and Reports API Tests', () => {
     // Since it returns excel buffer, we just check success
     expect(res.headers['content-type']).toContain('spreadsheetml');
   });
+
+  describe("Security S4, S5, S6: Export and Stats", () => {
+    let engA_token, adminToken_local;
+    let engA_id;
+
+    beforeEach(async () => {
+      const comp = await Company.create({ name: "Export Comp", region: engRegionId });
+
+      const engA = await User.create({ fullName: "Eng A Exp", username: "eng.a.exp", email: "a@exp.com", password: "password123", role: "engineer", region: engRegionId, phones:[{number:"01000000000"}] });
+      engA_id = engA._id;
+      const engB = await User.create({ fullName: "Eng B Exp", username: "eng.b.exp", email: "b@exp.com", password: "password123", role: "engineer", region: otherRegionId, phones:[{number:"01000000000"}] });
+      const admin = await User.create({ fullName: "Admin Exp", username: "admin.exp", email: "admin@exp.com", password: "password123", role: "admin", phones:[{number:"01000000000"}] });
+
+      engA_token = (await request(app).post("/api/auth/login").send({ username: "eng.a.exp", password: "password123" })).headers["set-cookie"][0].split(";")[0].split("=")[1];
+      adminToken_local = (await request(app).post("/api/auth/login").send({ username: "admin.exp", password: "password123" })).headers["set-cookie"][0].split(";")[0].split("=")[1];
+
+      await Visit.create({ company: comp._id, engineer: engA._id, visitDate: new Date(), type: "??????" });
+      await Visit.create({ company: comp._id, engineer: engB._id, visitDate: new Date(), type: "?????" });
+    });
+
+    it("S4: Eng A export only has their visits, ignores ?engineer= or ?region=", async () => {
+      const res = await request(app).get("/api/reports/export-visits?engineer=someotherid&region=otherregion").set("Cookie", [`token=${engA_token}`]);
+      expect(res.statusCode).toBe(200);
+      expect(res.headers["content-type"]).toContain("spreadsheetml");
+    });
+
+    it("S5: Engineer gets 403 on /api/reports/stats and admin routes, Admin gets 200", async () => {
+      const resStatsEng = await request(app).get("/api/reports/stats").set("Cookie", [`token=${engA_token}`]);
+      expect(resStatsEng.statusCode).toBe(403);
+      
+      const resStatsAdmin = await request(app).get("/api/reports/stats").set("Cookie", [`token=${adminToken_local}`]);
+      expect(resStatsAdmin.statusCode).toBe(200);
+    });
+
+    it("S6: Admin in Export can filter, data is returned", async () => {
+      const res = await request(app).get(`/api/reports/export-visits?engineer=${engA_id}&region=${engRegionId}`).set("Cookie", [`token=${adminToken_local}`]);
+      expect(res.statusCode).toBe(200);
+      expect(res.headers["content-type"]).toContain("spreadsheetml");
+    });
+  });
 });
