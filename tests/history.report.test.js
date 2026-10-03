@@ -14,6 +14,8 @@ describe('History and Reports API Tests', () => {
     await Region.deleteMany();
     await Company.deleteMany();
     await Visit.deleteMany();
+    await Region.deleteMany();
+    await User.deleteMany();
     const reg1 = await Region.create({ name: 'Region 1' });
     const reg2 = await Region.create({ name: 'Region 2' });
     engRegionId = reg1._id;
@@ -36,6 +38,8 @@ describe('History and Reports API Tests', () => {
     await Region.deleteMany();
     await Company.deleteMany();
     await Visit.deleteMany();
+    await Region.deleteMany();
+    await User.deleteMany();
   });
 
   it('history: engineer gets 403 on company from another region', async () => {
