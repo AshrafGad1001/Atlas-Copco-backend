@@ -106,6 +106,12 @@ exports.importCompanies = asyncHandler(async (req, res) => {
     toInsert.push({ nameAr, nameEn, region: regionId, address, industry, notes });
   }
 
+  if (req.body.dryRun === "true") {
+    const fs = require("fs");
+    fs.unlinkSync(req.file.path);
+    return res.status(200).json({ success: true, data: { added: toInsert.length, ignored } });
+  }
+
   if (toInsert.length > 0) {
     await Company.insertMany(toInsert);
   }
