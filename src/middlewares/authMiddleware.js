@@ -10,7 +10,7 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 
   if (!token) {
-    return res.status(401).json({ success: false, message: 'غير مصرح لك بالوصول، يرجى تسجيل الدخول' });
+    return res.status(401).json({ success: false, message: "غير مصرح لك بالوصول" });
   }
 
   try {
@@ -19,28 +19,28 @@ const protect = asyncHandler(async (req, res, next) => {
     const currentUser = await User.findById(decoded.id);
 
     if (!currentUser) {
-      return res.status(401).json({ success: false, message: 'المستخدم صاحب هذا الحساب لم يعد موجوداً' });
+      return res.status(401).json({ success: false, message: "غير مصرح لك بالوصول" });
     }
 
     if (!currentUser.isActive) {
-      return res.status(401).json({ success: false, message: 'هذا الحساب معطل. يرجى التواصل مع الإدارة' });
+      return res.status(401).json({ success: false, message: "غير مصرح لك بالوصول" });
     }
 
     if (currentUser.tokenVersion !== decoded.tv) {
-      return res.status(401).json({ success: false, message: 'تم تغيير بيانات الدخول، يرجى تسجيل الدخول مرة أخرى' });
+      return res.status(401).json({ success: false, message: "غير مصرح لك بالوصول" });
     }
 
     req.user = currentUser;
     next();
   } catch (error) {
-    return res.status(401).json({ success: false, message: 'جلسة غير صالحة، يرجى تسجيل الدخول' });
+    return res.status(401).json({ success: false, message: "غير مصرح لك بالوصول" });
   }
 });
 
 const restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ success: false, message: 'ليس لديك صلاحية لإجراء هذه العملية' });
+      return res.status(403).json({ success: false, message: "ليس لديك صلاحية لإجراء هذه العملية" });
     }
     next();
   };
