@@ -18,10 +18,33 @@ exports.getOverview = asyncHandler(async (req, res) => {
 
   const totalCompanies = await Company.countDocuments({ isDeleted: { $ne: true } });
   
-  const staleCompanies30 = await Company.countDocuments({
-    isDeleted: { $ne: true },
-    $or: [{ lastVisitAt: { $lt: thirtyDaysAgo } }, { lastVisitAt: null }]
-  });
+  const stalePipeline = [
+    { $match: { isDeleted: { $ne: true } } },
+    {
+      $lookup: {
+        from: 'visits',
+        let: { compId: '$_id' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$company', '$$compId'] }, isDeleted: { $ne: true } } },
+          { $sort: { visitDate: -1 } },
+          { $limit: 1 },
+          { $project: { visitDate: 1 } }
+        ],
+        as: 'lastVisit'
+      }
+    },
+    {
+      $match: {
+        $or: [
+          { 'lastVisit.0': { $exists: false } },
+          { 'lastVisit.0.visitDate': { $lt: thirtyDaysAgo } }
+        ]
+      }
+    },
+    { $count: 'count' }
+  ];
+  const staleRes = await Company.aggregate(stalePipeline);
+  const staleCompanies30 = staleRes.length > 0 ? staleRes[0].count : 0;
 
   const totalEngineers = await User.countDocuments({ role: "engineer", isActive: true });
   
@@ -138,20 +161,67 @@ exports.getStaleCompanies = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
 
   const threshold = new Date(Date.now() - days * 24 * 3600000);
-  const match = {
-    isDeleted: { $ne: true },
-    $or: [{ lastVisitAt: { $lt: threshold } }, { lastVisitAt: null }]
-  };
-  
-  if (region) match.region = region;
 
-  const total = await Company.countDocuments(match);
-  const comps = await Company.find(match)
-    .sort("lastVisitAt")
-    .skip(skip)
-    .limit(Number(limit))
-    .populate("region", "name")
-    .lean();
+  const stalePipeline = [
+    { $match: { isDeleted: { $ne: true } } }
+  ];
+
+  if (region) {
+    const mongoose = require('mongoose');
+    stalePipeline.push({ $match: { region: new mongoose.Types.ObjectId(region) } });
+  }
+
+  stalePipeline.push(
+    {
+      $lookup: {
+        from: 'visits',
+        let: { compId: '$_id' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$company', '$compId'] }, isDeleted: { $ne: true } } },
+          { $sort: { visitDate: -1 } },
+          { $limit: 1 },
+          { $project: { visitDate: 1 } }
+        ],
+        as: 'lastVisit'
+      }
+    },
+    {
+      $addFields: { computedLastVisitAt: { $arrayElemAt: ['$lastVisit.visitDate', 0] } }
+    },
+    {
+      $match: {
+        $or: [
+          { computedLastVisitAt: { $exists: false } },
+          { computedLastVisitAt: null },
+          { computedLastVisitAt: { $lt: threshold } }
+        ]
+      }
+    }
+  );
+
+  const totalRes = await Company.aggregate([...stalePipeline, { $count: 'count' }]);
+  const total = totalRes.length > 0 ? totalRes[0].count : 0;
+
+  let comps = await Company.aggregate([
+    ...stalePipeline,
+    { $sort: { computedLastVisitAt: 1, _id: 1 } },
+    { $skip: skip },
+    { $limit: Number(limit) },
+    {
+      $lookup: {
+        from: 'regions',
+        localField: 'region',
+        foreignField: '_id',
+        as: 'regionDoc'
+      }
+    },
+    { $addFields: { region: { $arrayElemAt: ['$regionDoc', 0] }, id: '$_id' } },
+    { $project: { regionDoc: 0, lastVisit: 0 } }
+  ]);
+
+  comps.forEach(c => {
+    c.lastVisitAt = c.computedLastVisitAt || null;
+  });
 
   res.status(200).json({
     success: true,
