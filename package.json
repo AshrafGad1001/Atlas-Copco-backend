@@ -6,7 +6,9 @@
   "scripts": {
     "test": "jest --runInBand --testTimeout=10000",
     "seed:admin": "node src/utils/seedAdmin.js",
-    "backfill:company-keys": "node scripts/backfill-company-keys.js"
+    "backfill:company-keys": "node scripts/backfill-company-keys.js",
+    "seed:demo": "node scripts/seedDemo.js",
+    "seed:demo:clear": "node scripts/seedDemo.js --clear"
   },
   "keywords": [],
   "author": "",
