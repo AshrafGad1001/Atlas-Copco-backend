@@ -131,7 +131,7 @@ exports.getStaleCompanies = asyncHandler(async (req, res) => {
   const days = Number(req.query.days) || 30;
   if (days < 7 || days > 365) {
     res.status(400);
-    throw new Error("??? ?? ???? ?????? ??? 7 ? 365");
+    throw new Error("يجب أن يكون النطاق بين 7 و 365");
   }
 
   const { region, page = 1, limit = 10 } = req.query;

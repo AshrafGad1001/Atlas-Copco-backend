@@ -33,7 +33,7 @@ const visitSchema = new mongoose.Schema({
     jobTitle: { type: String, maxlength: 100, trim: true },
     phone: { type: String, match: [/^[0-9+]{8,15}$/, 'رقم الموبايل غير صالح'], trim: true }
   }],
-    validate: [v => v.length <= 10, "???? ?????? 10 ??????"]
+    validate: [v => v.length <= 10, "أقصى عدد 10 مرفقات"]
   },
   isDeleted: { type: Boolean, default: false },
   deletedAt: Date,

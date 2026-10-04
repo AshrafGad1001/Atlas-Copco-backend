@@ -11,7 +11,7 @@ dotenv.config();
 
 const run = async () => {
   if (process.env.NODE_ENV === "production") {
-    console.error("????? ????? ???????? ?? ???????");
+    console.error("تم تم تم ?? تم");
     process.exit(1);
   }
 
@@ -44,9 +44,9 @@ const run = async () => {
 
   // Seed Regions
   const regionsData = [
-    { name: "DEMO \u0627\u0644\u0642\u0627\u0647\u0631\u0629" }, // ???????
-    { name: "DEMO \u0627\u0644\u0625\u0633\u0643\u0646\u062f\u0631\u064a\u0629" }, // ??????????
-    { name: "DEMO \u0627\u0644\u062f\u0644\u062a\u0627" } // ??????
+    { name: "DEMO \u0627\u0644\u0642\u0627\u0647\u0631\u0629" }, // تم
+    { name: "DEMO \u0627\u0644\u0625\u0633\u0643\u0646\u062f\u0631\u064a\u0629" }, // تم
+    { name: "DEMO \u0627\u0644\u062f\u0644\u062a\u0627" } // تم
   ];
 
   const regions = [];
@@ -77,7 +77,7 @@ const run = async () => {
   for (let i = 1; i <= 12; i++) {
     const reg = regions[i % 3];
     const data = {
-      nameAr: `\u0634\u0631\u0643\u0629 \u062a\u062c\u0631\u064a\u0628\u064a\u0629 ${i}`, // ???? ??????? i
+      nameAr: `\u0634\u0631\u0643\u0629 \u062a\u062c\u0631\u064a\u0628\u064a\u0629 ${i}`, // تم تم i
       nameEn: `Demo Company ${i}`,
       region: reg._id,
       notes: "DEMO_SEED",

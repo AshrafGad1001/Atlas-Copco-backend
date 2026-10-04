@@ -197,11 +197,11 @@ describe("Company API Tests", () => {
     await Company.create({ nameAr: "\u0645\u062d\u0630\u0648\u0641", region: engRegionId, isDeleted: true });
     await Company.create({ nameAr: "\u0623\u062d\u0645\u062f \u0645\u0646\u0637\u0642\u0629 \u062a\u0627\u0646\u064a\u0629", region: otherRegionId });
     
-    // search ????
+    // search تم
     let res = await request(app).get("/api/companies?search=" + encodeURIComponent("\u0627\u062d\u0645\u062f")).set("Cookie", [`token=${adminToken}`]);
     expect(res.body.data.length).toBe(2);
     
-    // search ????
+    // search تم
     res = await request(app).get("/api/companies?search=" + encodeURIComponent("\u0645\u0635\u0646\u0639")).set("Cookie", [`token=${adminToken}`]);
     expect(res.body.data.length).toBe(1);
 

@@ -107,9 +107,9 @@ describe('Visit API Tests', () => {
       engC_token = (await request(app).post("/api/auth/login").send({ username: "eng.c", password: "password123" })).headers["set-cookie"][0].split(";")[0].split("=")[1];
       otherEng_token = (await request(app).post("/api/auth/login").send({ username: "eng.b", password: "password123" })).headers["set-cookie"][0].split(";")[0].split("=")[1];
 
-      const vA = await Visit.create({ company: comp._id, engineer: engA._id, visitDate: new Date(), type: "??????" });
+      const vA = await Visit.create({ company: comp._id, engineer: engA._id, visitDate: new Date(), type: "مكتملة" });
       visitA_id = vA._id;
-      await Visit.create({ company: comp._id, engineer: engC._id, visitDate: new Date(), type: "?????" });
+      await Visit.create({ company: comp._id, engineer: engC._id, visitDate: new Date(), type: "مكتملة" });
     });
 
     it("Eng A sees only their visits, even if Eng C is in same region and visited same company", async () => {
@@ -122,7 +122,7 @@ describe('Visit API Tests', () => {
     it("Eng from another region getting 403 on updating a visit", async () => {
       const res = await request(app).put("/api/visits/" + visitA_id).set("Cookie", [`token=${otherEng_token}`]).send({
         company: (await Visit.findById(visitA_id)).company,
-        visitDate: new Date(), type: "?????"
+        visitDate: new Date(), type: "مكتملة"
       });
       // It should be 403
       expect(res.statusCode).toBe(403);

@@ -90,8 +90,8 @@ describe('History and Reports API Tests', () => {
       engA_token = (await request(app).post("/api/auth/login").send({ username: "eng.a.exp", password: "password123" })).headers["set-cookie"][0].split(";")[0].split("=")[1];
       adminToken_local = (await request(app).post("/api/auth/login").send({ username: "admin.exp", password: "password123" })).headers["set-cookie"][0].split(";")[0].split("=")[1];
 
-      await Visit.create({ company: comp._id, engineer: engA._id, visitDate: new Date(), type: "??????" });
-      await Visit.create({ company: comp._id, engineer: engB._id, visitDate: new Date(), type: "?????" });
+      await Visit.create({ company: comp._id, engineer: engA._id, visitDate: new Date(), type: "مكتملة" });
+      await Visit.create({ company: comp._id, engineer: engB._id, visitDate: new Date(), type: "مكتملة" });
     });
 
     it("S4: Eng A export only has their visits, ignores ?engineer= or ?region=", async () => {
