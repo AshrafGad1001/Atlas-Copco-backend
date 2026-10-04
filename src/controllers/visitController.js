@@ -234,3 +234,17 @@ exports.deleteVisit = asyncHandler(async (req, res) => {
 
   res.status(200).json({ success: true, message: "\u062a\u0645 \u0627\u0644\u062d\u0630\u0641" });
 });
+
+exports.getMineSummary = require("../utils/asyncHandler")(async (req, res) => {
+  const Visit = require("../models/Visit");
+  const { getCairoStartOfDay, getCairoStartOfMonth } = require("../lib/dateUtils");
+  const now = new Date();
+  const startOfToday = getCairoStartOfDay(now);
+  const startOfMonth = getCairoStartOfMonth(now);
+  const startOf7Days = new Date(startOfToday.getTime() - 6 * 24 * 3600000);
+  const filter = { engineer: req.user._id, isDeleted: { $ne: true } };
+  const today = await Visit.countDocuments({ ...filter, visitDate: { $gte: startOfToday } });
+  const last7Days = await Visit.countDocuments({ ...filter, visitDate: { $gte: startOf7Days } });
+  const month = await Visit.countDocuments({ ...filter, visitDate: { $gte: startOfMonth } });
+  res.status(200).json({ success: true, data: { today, last7Days, month } });
+});

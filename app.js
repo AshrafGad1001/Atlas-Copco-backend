@@ -50,6 +50,7 @@ app.use('/api/admin/companies', require('./src/routes/adminCompanyRoutes'));
 app.use('/api/visits', visitRoutes);
 app.use('/api/admin/visits', require('./src/routes/adminVisitRoutes'));
 app.use('/api/reports', reportRoutes);
+app.use('/api/admin/stats', require('./src/routes/adminStatsRoutes'));
 
 // Error Handling Middlewares
 app.use(notFound);
