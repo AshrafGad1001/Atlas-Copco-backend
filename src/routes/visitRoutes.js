@@ -11,6 +11,7 @@ router.route('/')
   .post(validate(visitSchema), createVisit)
   
 
+router.get('/mine/summary', require('../controllers/visitController').getMineSummary);
 router.get('/mine', getVisits);
 
 router.route('/:id')
