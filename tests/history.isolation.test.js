@@ -10,7 +10,7 @@ let adminAgent;
 let engAAgent;
 let engBAgent;
 
-beforeAll(async () => {
+beforeEach(async () => {
   assertSafeTestUri(process.env.MONGO_URI_TEST);
   await mongoose.connect(process.env.MONGO_URI_TEST);
   await mongoose.connection.db.dropDatabase();

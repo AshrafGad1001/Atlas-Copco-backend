@@ -9,7 +9,7 @@ const User = require('../src/models/User');
 let world;
 let engAAgent;
 
-beforeAll(async () => {
+beforeEach(async () => {
   assertSafeTestUri(process.env.MONGO_URI_TEST);
   await mongoose.connect(process.env.MONGO_URI_TEST);
   await mongoose.connection.db.dropDatabase();
