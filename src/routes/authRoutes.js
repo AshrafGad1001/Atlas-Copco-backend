@@ -8,7 +8,7 @@ const router = express.Router();
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'test' ? 100 : 10,
+  max: process.env.NODE_ENV === 'test' ? 1000 : 10,
   message: { success: false, message: 'Too many login attempts, please try again after 15 minutes' }
 });
 
