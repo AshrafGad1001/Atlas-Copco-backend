@@ -105,7 +105,7 @@ async function setupWorld() {
     visitDate: new Date(),
     type: 'planned',
     notes: 'Visit C1 notes',
-    attendees: []
+    attendees: [{ name: 'AttC', phone: '012999999' }]
   });
 
   world.vB2 = await Visit.create({
