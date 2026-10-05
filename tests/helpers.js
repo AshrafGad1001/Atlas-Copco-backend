@@ -94,8 +94,8 @@ async function setupWorld() {
     type: 'completed',
     notes: 'Visit A1 notes',
     attendees: [
-      { name: 'Att1', phone: '0123' },
-      { name: 'Att2', phone: '0124' }
+      { name: 'Att1', phone: '012345678' },
+      { name: 'Att2', phone: '012456789' }
     ]
   });
 
