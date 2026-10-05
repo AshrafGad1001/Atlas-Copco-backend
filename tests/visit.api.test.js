@@ -56,7 +56,7 @@ describe('Visit API Tests', () => {
 
   it('updating visit of another engineer = 403 (even in same region)', async () => {
     const visit = await Visit.create({ company: compEng._id, engineer: engUser._id });
-    const res = await request(app).put(`/api/visits/${visit._id}`).set('Cookie', [`token=${eng3Token}`]).send({ company: compEng._id, notes: 'test' });
+    const res = await request(app).patch(`/api/visits/${visit._id}`).set('Cookie', [`token=${eng3Token}`]).send({ company: compEng._id, notes: 'test' });
     expect(res.statusCode).toBe(403);
   });
 
@@ -73,7 +73,7 @@ describe('Visit API Tests', () => {
     await mongoose.connection.collection('visits').updateOne({ _id: visit._id }, { $set: { createdAt: past } });
 
     const check = await Visit.findById(visit._id);
-    const res = await request(app).put(`/api/visits/${visit._id}`).set('Cookie', [`token=${engToken}`]).send({ company: compEng._id, notes: 'new' });
+    const res = await request(app).patch(`/api/visits/${visit._id}`).set('Cookie', [`token=${engToken}`]).send({ company: compEng._id, notes: 'new' });
     expect(res.statusCode).toBe(403);
     expect(res.body.message).toContain('24 ساعة');
   });
@@ -113,14 +113,14 @@ describe('Visit API Tests', () => {
     });
 
     it("Eng A sees only their visits, even if Eng C is in same region and visited same company", async () => {
-      const resA = await request(app).get("/api/visits").set("Cookie", [`token=${engA_token}`]);
+      const resA = await request(app).get("/api/visits/mine").set("Cookie", [`token=${engA_token}`]);
       expect(resA.statusCode).toBe(200);
       expect(resA.body.data.length).toBe(1); // Only A's visit
       expect(resA.body.data[0].engineer._id.toString()).toBe(visitA_id ? (await Visit.findById(visitA_id)).engineer.toString() : "");
     });
 
     it("Eng from another region getting 403 on updating a visit", async () => {
-      const res = await request(app).put("/api/visits/" + visitA_id).set("Cookie", [`token=${otherEng_token}`]).send({
+      const res = await request(app).patch("/api/visits/" + visitA_id).set("Cookie", [`token=${otherEng_token}`]).send({
         company: (await Visit.findById(visitA_id)).company,
         visitDate: new Date(), type: "مكتملة"
       });

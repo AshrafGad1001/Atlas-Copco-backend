@@ -26,9 +26,16 @@ function searchDir(dir) {
 
       const lines = content.split('\n');
       lines.forEach((line, i) => {
-        if (new RegExp("\\?{3,}").test(line) || /\ufffd/.test(line)) {
+        // Detect ??? or \ufffd
+        if (/\?{3,}/.test(line) || /\ufffd/.test(line)) {
            console.log(`${full}:${i+1} -> contains corrupted text.`);
            hasError = true;
+        } else if (/\?\?/.test(line)) {
+           // check if ?? is not nullish coalescing or query param
+           if (!/(\w\s*\?\?\s*\w)|(\?\w+=)/.test(line)) {
+             console.log(`${full}:${i+1} -> contains corrupted text (??).`);
+             hasError = true;
+           }
         }
       });
     }

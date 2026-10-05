@@ -11,7 +11,7 @@ dotenv.config();
 
 const run = async () => {
   if (process.env.NODE_ENV === "production") {
-    console.error("تم تم تم ?? تم");
+    console.error("يرجى التأكيد: npm run seed:demo -- --confirm db_name");
     process.exit(1);
   }
 
