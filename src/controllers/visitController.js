@@ -162,7 +162,7 @@ exports.updateVisit = asyncHandler(async (req, res) => {
   if (req.user.role === "engineer") {
     const hours = (Date.now() - visit.createdAt.getTime()) / 3600000;
     if (hours > EDIT_WINDOW_HOURS) {
-      return res.status(403).json({ success: false, message: "\u0627\u0646\u062a\u0647\u062a \u0645\u0647\u0644\u0629 \u0627\u0644\u062a\u0639\u062f\u064a\u0644" });
+      return res.status(403).json({ success: false, message: "\u0627\u0646\u062a\u0647\u062a \u0645\u0647\u0644\u0629 \u0627\u0644\u062a\u0639\u062f\u064a\u0644 (24 \u0633\u0627\u0639\u0629)" });
     }
   }
 
@@ -223,7 +223,7 @@ exports.deleteVisit = asyncHandler(async (req, res) => {
   if (req.user.role === "engineer") {
     const hours = (Date.now() - visit.createdAt.getTime()) / 3600000;
     if (hours > EDIT_WINDOW_HOURS) {
-      return res.status(403).json({ success: false, message: "\u0627\u0646\u062a\u0647\u062a \u0645\u0647\u0644\u0629 \u0627\u0644\u062a\u0639\u062f\u064a\u0644" });
+      return res.status(403).json({ success: false, message: "\u0627\u0646\u062a\u0647\u062a \u0645\u0647\u0644\u0629 \u0627\u0644\u062a\u0639\u062f\u064a\u0644 (24 \u0633\u0627\u0639\u0629)" });
     }
   }
 
