@@ -3,26 +3,18 @@ const request = require('supertest');
 const app = require('../app');
 const mongoose = require('mongoose');
 const { setupWorld, loginAs } = require('./helpers');
-const { assertSafeTestUri } = require('./testGuard');
-const Company = require('../src/models/Company');
+const { const Company = require('../src/models/Company');
 
 let world;
 let adminAgent;
 let engAgent;
 
 beforeEach(async () => {
-  assertSafeTestUri(process.env.MONGO_URI_TEST);
-  await mongoose.connect(process.env.MONGO_URI_TEST);
-  await mongoose.connection.db.dropDatabase();
-  world = await setupWorld();
+        world = await setupWorld();
   adminAgent = await loginAs(app, world.admin);
   engAgent = await loginAs(app, world.engA);
 });
 
-afterAll(async () => {
-  await mongoose.connection.db.dropDatabase();
-  await mongoose.disconnect();
-});
 
 describe('Company Isolation Tests', () => {
   it('A list: c1 and c1b only', async () => {

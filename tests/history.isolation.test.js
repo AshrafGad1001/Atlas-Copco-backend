@@ -3,27 +3,19 @@ const request = require('supertest');
 const app = require('../app');
 const mongoose = require('mongoose');
 const { setupWorld, loginAs } = require('./helpers');
-const { assertSafeTestUri } = require('./testGuard');
-
+const { 
 let world;
 let adminAgent;
 let engAAgent;
 let engBAgent;
 
 beforeEach(async () => {
-  assertSafeTestUri(process.env.MONGO_URI_TEST);
-  await mongoose.connect(process.env.MONGO_URI_TEST);
-  await mongoose.connection.db.dropDatabase();
-  world = await setupWorld();
+        world = await setupWorld();
   adminAgent = await loginAs(app, world.admin);
   engAAgent = await loginAs(app, world.engA);
   engBAgent = await loginAs(app, world.engB);
 });
 
-afterAll(async () => {
-  await mongoose.connection.db.dropDatabase();
-  await mongoose.disconnect();
-});
 
 describe('History Isolation Tests', () => {
   it('A history/c1 returns 200 with vA1 and vC1, but attendees hidden for vC1', async () => {
