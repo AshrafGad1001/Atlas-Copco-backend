@@ -20,7 +20,7 @@ async function setupWorld() {
     email: 'admin@test.com',
     password: 'password123',
     role: 'admin',
-    phones: [{ number: '' }]
+    phones: [{ number: '01000000000' }]
   });
 
   world.engA = await User.create({
@@ -30,7 +30,7 @@ async function setupWorld() {
     password: 'password123',
     role: 'engineer',
     region: world.region1._id,
-    phones: [{ number: '' }]
+    phones: [{ number: '01000000001' }]
   });
 
   world.engC = await User.create({
@@ -40,7 +40,7 @@ async function setupWorld() {
     password: 'password123',
     role: 'engineer',
     region: world.region1._id,
-    phones: [{ number: '' }]
+    phones: [{ number: '01000000002' }]
   });
 
   world.engB = await User.create({
@@ -50,7 +50,7 @@ async function setupWorld() {
     password: 'password123',
     role: 'engineer',
     region: world.region2._id,
-    phones: [{ number: '' }]
+    phones: [{ number: '01000000003' }]
   });
 
   world.engInactive = await User.create({
@@ -61,7 +61,7 @@ async function setupWorld() {
     role: 'engineer',
     region: world.region1._id,
     isActive: false,
-    phones: [{ number: '' }]
+    phones: [{ number: '01000000004' }]
   });
 
   // Companies

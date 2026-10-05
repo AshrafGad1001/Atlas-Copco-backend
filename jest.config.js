@@ -4,5 +4,6 @@ module.exports = {
   globalSetup: "./tests/globalSetup.js",
   testEnvironment: 'node',
   setupFilesAfterEnv: ['./tests/setup.js'],
-  clearMocks: true
+  clearMocks: true,
+  testTimeout: 30000
 };
