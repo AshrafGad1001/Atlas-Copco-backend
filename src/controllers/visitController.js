@@ -317,5 +317,11 @@ exports.getMineSummary = require("../utils/asyncHandler")(async (req, res) => {
   const today = await Visit.countDocuments({ ...filter, visitDate: { $gte: startOfToday } });
   const last7Days = await Visit.countDocuments({ ...filter, visitDate: { $gte: startOf7Days } });
   const month = await Visit.countDocuments({ ...filter, visitDate: { $gte: startOfMonth } });
-  res.status(200).json({ success: true, data: { today, last7Days, month } });
+  
+  const followUpFilter = { ...filter, 'followUp.dueDate': { $exists: true }, 'followUp.done': { $ne: true } };
+  const todayDue = await Visit.countDocuments({ ...followUpFilter, 'followUp.dueDate': startOfToday });
+  const overdue = await Visit.countDocuments({ ...followUpFilter, 'followUp.dueDate': { $lt: startOfToday } });
+  const upcoming = await Visit.countDocuments({ ...followUpFilter, 'followUp.dueDate': { $gt: startOfToday } });
+  res.status(200).json({ success: true, data: { today, last7Days, month, followUps: { today: todayDue, overdue, upcoming } } });
+
 });

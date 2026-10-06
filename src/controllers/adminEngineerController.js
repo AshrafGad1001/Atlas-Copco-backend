@@ -49,6 +49,12 @@ exports.getEngineerStats = async (req, res) => {
 
     const coveragePercent = companiesInRegion > 0 ? Math.round((visitedByHimLast30 / companiesInRegion) * 100) : 0;
 
+    
+    const followUpFilter = { engineer: user._id, isDeleted: false, 'followUp.dueDate': { $exists: true }, 'followUp.done': { $ne: true } };
+    const todayDue = await Visit.countDocuments({ ...followUpFilter, 'followUp.dueDate': startOfToday });
+    const overdue = await Visit.countDocuments({ ...followUpFilter, 'followUp.dueDate': { $lt: startOfToday } });
+    const upcoming = await Visit.countDocuments({ ...followUpFilter, 'followUp.dueDate': { $gt: startOfToday } });
+
     res.status(200).json({
       success: true,
       data: {
@@ -58,9 +64,11 @@ exports.getEngineerStats = async (req, res) => {
         lastVisitAt,
         companiesInRegion,
         visitedByHimLast30,
-        coveragePercent
+        coveragePercent,
+        followUps: { today: todayDue, overdue, upcoming }
       }
     });
+
   } catch (error) {
     if (error.name === 'CastError') {
       return res.status(400).json({ success: false, message: 'Invalid ID' });
