@@ -99,7 +99,7 @@ exports.exportVisitsToExcel = asyncHandler(async (req, res) => {
     let row = {
       date: formatCairoDate(v.visitDate),
       time: formatCairoTime(v.visitDate),
-      company: v.company?.nameAr || v.company?.nameEn || '',
+      company: `${v.company?.nameAr || ''} ${v.company?.nameEn || ''}`.trim(),
       type: typeMap[v.type] || v.type,
       attendees: attendeesStr,
       notes: v.notes || '',

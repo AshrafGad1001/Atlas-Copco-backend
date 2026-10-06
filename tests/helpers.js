@@ -26,7 +26,7 @@ async function setupWorld() {
 
   world.engA = await User.create({
     fullName: 'Engineer A',
-    username: 'engA',
+    username: 'enga',
     email: 'enga@test.com',
     password: 'password123',
     role: 'engineer',

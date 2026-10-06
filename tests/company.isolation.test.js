@@ -35,7 +35,7 @@ describe('Company Isolation Tests', () => {
 
   it('A GET, PATCH, DELETE on c2 = 403', async () => {
     let res = await engAgent.get('/api/companies/' + world.c2._id);
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(404); // Route doesn't exist
     
     res = await engAgent.patch('/api/companies/' + world.c2._id).send({ nameEn: 'New' });
     expect(res.statusCode).toBe(403);

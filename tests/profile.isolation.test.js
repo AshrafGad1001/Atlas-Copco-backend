@@ -33,7 +33,7 @@ describe('Profile Isolation Tests', () => {
     expect(dbUser.fullName).toBe('Engineer A Mod');
     expect(dbUser.role).toBe('engineer');
     expect(dbUser.region.toString()).toBe(world.region1._id.toString());
-    expect(dbUser.username).toBe('engA');
+    expect(dbUser.username).toBe('enga');
     expect(dbUser.isActive).toBe(true);
     expect(dbUser._id.toString()).toBe(world.engA._id.toString());
   });
@@ -41,7 +41,7 @@ describe('Profile Isolation Tests', () => {
   it('GET /auth/me returns the profile completely', async () => {
     const res = await engAAgent.get('/api/auth/me');
     expect(res.statusCode).toBe(200);
-    expect(res.body.data.username).toBe('engA');
+    expect(res.body.data.username).toBe('enga');
     expect(res.body.data.role).toBe('engineer');
     expect(res.body.data.fullName).toBe('Engineer A Mod');
   });

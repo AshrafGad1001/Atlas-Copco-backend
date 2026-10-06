@@ -85,7 +85,8 @@ exports.createVisit = asyncHandler(async (req, res) => {
     }
   }
 
-  const visit = await Visit.create(req.body);
+  let visit = await Visit.create(req.body);
+  visit = await visit.populate('engineer', 'fullName profileImage.url');
   const v = visit.toObject();
   injectFollowUpStatus(v, new Date());
   res.status(201).json({ success: true, data: v });

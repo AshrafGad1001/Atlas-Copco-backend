@@ -3,9 +3,10 @@ const Company = require('../models/Company');
 const Visit = require('../models/Visit');
 const asyncHandler = require('../utils/asyncHandler');
 
+const xssRegex = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/i;
 const baseSchema = z.object({
-  nameAr: z.string().optional(),
-  nameEn: z.string().optional(),
+  nameAr: z.string().optional().refine(val => !val || !xssRegex.test(val), "\u0627\u0633\u0645 \u063a\u064a\u0631 \u0635\u0627\u0644\u062d"),
+  nameEn: z.string().optional().refine(val => !val || !xssRegex.test(val), "\u0627\u0633\u0645 \u063a\u064a\u0631 \u0635\u0627\u0644\u062d"),
   region: z.string().min(1, "\u0627\u0644\u0645\u0646\u0637\u0642\u0629 \u0645\u0637\u0644\u0648\u0628\u0629"),
   address: z.string().optional(),
   industry: z.string().optional(),
@@ -240,7 +241,7 @@ exports.updateCompany = asyncHandler(async (req, res) => {
       return res.status(403).json({ success: false, message: "\u063a\u064a\u0631 \u0645\u0635\u0631\u062d" });
     }
     if (req.body.isDeleted !== undefined) {
-      return res.status(403).json({ success: false, message: "\u063a\u064a\u0631 \u0645\u0635\u0631\u062d" });
+      delete req.body.isDeleted;
     }
     delete req.body.region;
   }
@@ -341,15 +342,13 @@ exports.getCompanyHistory = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
-    data: {
-      company,
-      visits,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
+    data: visits,
+    company,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
     }
   });
 });
