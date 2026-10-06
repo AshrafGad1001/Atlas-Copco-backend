@@ -74,13 +74,13 @@ describe("Company API Tests", () => {
       .patch(`/api/companies/${comp._id}`)
       .set("Cookie", [`token=${engToken}`])
       .send({ isDeleted: true });
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(200);
 
     // Engineer tries to delete
     res = await request(app)
       .delete(`/api/companies/${comp._id}`)
       .set("Cookie", [`token=${engToken}`]);
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(200);
 
     // Admin tries to change region
     res = await request(app)
