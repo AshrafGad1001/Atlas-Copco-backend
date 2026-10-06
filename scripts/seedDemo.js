@@ -108,7 +108,31 @@ const run = async () => {
       const comp = comps[i];
       const eng = engineers.find(e => e.region.toString() === comp.region.toString() && e.isActive) || engineers[0];
       
-      // Visit today
+      
+        visits.push({
+          company: comp._id, engineer: eng._id,
+          visitDate: new Date(now - 1 * DAY), createdAt: new Date(now - 1 * DAY),
+          type: "completed", notes: "DEMO_SEED FollowUp Today",
+          followUp: { dueDate: new Date(now), note: "Follow up today", done: false }
+        });
+
+
+        visits.push({
+          company: comp._id, engineer: eng._id,
+          visitDate: new Date(now - 10 * DAY), createdAt: new Date(now - 10 * DAY),
+          type: "completed", notes: "DEMO_SEED FollowUp Overdue",
+          followUp: { dueDate: new Date(now - 2 * DAY), note: "Follow up overdue", done: false }
+        });
+
+
+        visits.push({
+          company: comp._id, engineer: eng._id,
+          visitDate: new Date(now - 2 * DAY), createdAt: new Date(now - 2 * DAY),
+          type: "completed", notes: "DEMO_SEED FollowUp Upcoming",
+          followUp: { dueDate: new Date(now + 2 * DAY), note: "Follow up upcoming", done: false }
+        });
+
+        // Visit today
       visits.push({
         company: comp._id, engineer: eng._id,
         visitDate: new Date(now), createdAt: new Date(now),
