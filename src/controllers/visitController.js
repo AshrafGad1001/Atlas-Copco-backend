@@ -452,3 +452,61 @@ exports.deleteFollowUp = asyncHandler(async (req, res, next) => {
   await visit.save();
   res.status(200).json({ success: true, data: visit });
 });
+
+
+const cloudinary = require('../lib/cloudinary');
+const streamifier = require('streamifier');
+
+exports.uploadPhotos = asyncHandler(async (req, res, next) => {
+  const visit = await Visit.findById(req.params.id);
+  if (!visit) return res.status(404).json({ success: false, message: 'Visit not found' });
+  if (req.user.role === 'engineer' && visit.engineer.toString() !== req.user.id) {
+    return res.status(403).json({ success: false, message: 'Not authorized' });
+  }
+
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ success: false, message: 'No photos provided' });
+  }
+
+  if (visit.photos.length + req.files.length > 5) {
+    return res.status(400).json({ success: false, message: 'Maximum 5 photos allowed per visit' });
+  }
+
+  const uploadPromises = req.files.map(file => {
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream({ folder: 'atlas-copco-visits' }, (error, result) => {
+        if (result) resolve(result.secure_url);
+        else reject(error);
+      });
+      streamifier.createReadStream(file.buffer).pipe(stream);
+    });
+  });
+
+  try {
+    const urls = await Promise.all(uploadPromises);
+    visit.photos.push(...urls);
+    await visit.save();
+    res.status(200).json({ success: true, data: visit });
+  } catch(err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Upload failed' });
+  }
+});
+
+exports.deletePhoto = asyncHandler(async (req, res, next) => {
+  const visit = await Visit.findById(req.params.id);
+  if (!visit) return res.status(404).json({ success: false, message: 'Visit not found' });
+  if (req.user.role === 'engineer' && visit.engineer.toString() !== req.user.id) {
+    return res.status(403).json({ success: false, message: 'Not authorized' });
+  }
+
+  const { url } = req.body;
+  if (!url) return res.status(400).json({ success: false, message: 'Photo URL required' });
+
+  visit.photos = visit.photos.filter(p => p !== url);
+  await visit.save();
+  
+  // Optional: Delete from cloudinary (extract public_id from url if needed)
+  
+  res.status(200).json({ success: true, data: visit });
+});

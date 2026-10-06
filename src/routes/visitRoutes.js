@@ -21,7 +21,13 @@ router.route('/:id/follow-up')
   .patch(require('../controllers/visitController').patchFollowUp)
   .delete(require('../controllers/visitController').deleteFollowUp);
 
+
+const upload = require('../middlewares/upload');
+router.post('/:id/photos', upload.array('photos', 5), require('../controllers/visitController').uploadPhotos);
+router.delete('/:id/photos', require('../controllers/visitController').deletePhoto);
+
 router.route('/:id')
+
 
   .get(getVisit)
   .patch(validate(visitSchema), updateVisit)

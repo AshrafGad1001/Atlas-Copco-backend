@@ -9,7 +9,8 @@
     "backfill:company-keys": "node scripts/backfill-company-keys.js",
     "seed:demo": "node scripts/seedDemo.js",
     "seed:demo:clear": "node scripts/seedDemo.js --clear",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "check:encoding": "node scripts/check_encoding.js"
   },
   "keywords": [],
   "author": "",
@@ -28,6 +29,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.10.3",
     "multer": "^2.4.0",
+    "streamifier": "^0.1.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {
