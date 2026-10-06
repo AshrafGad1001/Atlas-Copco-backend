@@ -8,7 +8,7 @@ const validate = (schema) => (req, res, next) => {
     if (error instanceof ZodError) {
       return res.status(400).json({
         success: false,
-        message: 'Validation Error',
+        message: 'بيانات غير صالحة',
         errors: error.issues.map(e => ({
           field: e.path.join('.'),
           message: e.message
