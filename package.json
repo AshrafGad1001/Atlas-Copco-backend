@@ -8,7 +8,8 @@
     "seed:admin": "node src/utils/seedAdmin.js",
     "backfill:company-keys": "node scripts/backfill-company-keys.js",
     "seed:demo": "node scripts/seedDemo.js",
-    "seed:demo:clear": "node scripts/seedDemo.js --clear"
+    "seed:demo:clear": "node scripts/seedDemo.js --clear",
+    "dev": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "jest": "^30.5.2",
+    "nodemon": "^3.1.14",
     "supertest": "^7.3.0"
   }
 }
