@@ -1,4 +1,3 @@
-
 const { z } = require("zod");
 const Visit = require("../models/Visit");
 const Company = require("../models/Company");
@@ -7,18 +6,37 @@ const asyncHandler = require("../utils/asyncHandler");
 const EDIT_WINDOW_HOURS = 24;
 
 exports.visitSchema = z.object({
-  company: z.string().min(1, "\u0627\u0644\u0634\u0631\u0643\u0629 \u0645\u0637\u0644\u0648\u0628\u0629").optional(),
+  company: z.string().min(1, "الشركة مطلوبة").optional(),
   visitDate: z.string().optional(),
   type: z.string().optional(),
   notes: z.string().optional(),
   nextStep: z.string().optional(),
+  followUp: z.object({ dueDate: z.string(), note: z.string().max(200, "أقصى طول 200 حرف").optional(), done: z.boolean().optional() }).optional(),
   status: z.enum(["planned", "completed", "cancelled"]).optional(),
   attendees: z.array(z.object({
-    name: z.string().min(2, "\u0627\u0644\u0627\u0633\u0645 \u0645\u0637\u0644\u0648\u0628").max(100),
+    name: z.string().min(2, "الاسم مطلوب").max(100),
     jobTitle: z.string().max(100).optional().or(z.literal("")),
-    phone: z.string().regex(/^[0-9+]{8,15}$/, "\u0631\u0642\u0645 \u0635\u062d\u064a\u062d").optional().or(z.literal(""))
-  })).max(10, "\u0627\u0644\u062d\u062f \u0627\u0644\u0623\u0642\u0635\u0649 10").optional()
+    phone: z.string().regex(/^[0-9+]{8,15}$/, "رقم صحيح").optional().or(z.literal(""))
+  })).max(10, "الحد الأقصى 10").optional()
 });
+
+function getFollowUpStatus(fu, now = new Date()) {
+  if (!fu || !fu.dueDate) return null;
+  if (fu.done) return 'done';
+  const { getCairoStartOfDay } = require("../lib/dateUtils");
+  const today = getCairoStartOfDay(now);
+  const due = getCairoStartOfDay(new Date(fu.dueDate));
+  if (due < today) return 'overdue';
+  if (due.getTime() === today.getTime()) return 'today';
+  return 'upcoming';
+}
+
+function injectFollowUpStatus(visit, now) {
+  if (visit && visit.followUp && visit.followUp.dueDate) {
+    visit.followUp.status = getFollowUpStatus(visit.followUp, now);
+  }
+  return visit;
+}
 
 function formatChange(fromVal, toVal) {
   let f = fromVal == null ? "" : String(fromVal);
@@ -33,25 +51,44 @@ exports.createVisit = asyncHandler(async (req, res) => {
     req.body.engineer = req.user._id;
   }
   
-  if (!req.body.company) return res.status(400).json({ success: false, message: "\u0627\u0644\u0634\u0631\u0643\u0629 \u0645\u0637\u0644\u0648\u0628\u0629" });
+  if (req.body.followUp && req.body.followUp.dueDate) {
+    const { getCairoStartOfDay } = require("../lib/dateUtils");
+    const today = getCairoStartOfDay(new Date());
+    const vDate = getCairoStartOfDay(new Date(req.body.visitDate || new Date()));
+    const due = getCairoStartOfDay(new Date(req.body.followUp.dueDate));
+    
+    if (due < vDate) {
+      return res.status(400).json({ success: false, message: 'تاريخ المتابعة يجب أن يكون بعد أو في نفس يوم الزيارة' });
+    }
+    const maxDate = new Date(today);
+    maxDate.setDate(maxDate.getDate() + 365);
+    if (due > maxDate) {
+      return res.status(400).json({ success: false, message: 'تاريخ المتابعة أقصاه 365 يوم من اليوم' });
+    }
+    req.body.followUp.dueDate = due;
+  }
+
+  if (!req.body.company) return res.status(400).json({ success: false, message: "الشركة مطلوبة" });
   
   const company = await Company.findById(req.body.company);
-  if (!company || company.isDeleted) return res.status(404).json({ success: false, message: "\u0634\u0631\u0643\u0629 \u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f\u0629" });
+  if (!company || company.isDeleted) return res.status(404).json({ success: false, message: "شركة غير موجودة" });
   
   if (req.user.role === "engineer" && company.region.toString() !== req.user.region.toString()) {
-    return res.status(403).json({ success: false, message: "\u0644\u064a\u0633 \u0644\u062f\u064a\u0643 \u0635\u0644\u0627\u062d\u064a\u0629" });
+    return res.status(403).json({ success: false, message: "ليس لديك صلاحية" });
   }
 
   if (req.body.visitDate) {
     const vd = new Date(req.body.visitDate);
     const maxDate = new Date(Date.now() + 5 * 60000);
     if (vd > maxDate) {
-      return res.status(400).json({ success: false, message: "\u0644\u0627 \u064a\u0645\u0643\u0646 \u062a\u0633\u062c\u064a\u0644 \u0632\u064a\u0627\u0631\u0629 \u0641\u064a \u0627\u0644\u0645\u0633\u062a\u0642\u0628\u0644" });
+      return res.status(400).json({ success: false, message: "لا يمكن تسجيل زيارة في المستقبل" });
     }
   }
 
   const visit = await Visit.create(req.body);
-  res.status(201).json({ success: true, data: visit });
+  const v = visit.toObject();
+  injectFollowUpStatus(v, new Date());
+  res.status(201).json({ success: true, data: v });
 });
 
 exports.getVisits = asyncHandler(async (req, res) => {
@@ -77,12 +114,13 @@ exports.getVisits = asyncHandler(async (req, res) => {
     .limit(limit)
     .lean();
     
+  const now = new Date();
   const mapped = visits.map(v => {
     const hours = (Date.now() - new Date(v.createdAt).getTime()) / 3600000;
     v.canEdit = req.user.role === "admin" || hours <= EDIT_WINDOW_HOURS;
     v.canDelete = req.user.role === "admin" || hours <= EDIT_WINDOW_HOURS;
     if (req.user.role === "engineer") delete v.editHistory;
-    return v;
+    return injectFollowUpStatus(v, now);
   });
 
   res.status(200).json({ success: true, data: mapped });
@@ -122,10 +160,11 @@ exports.getAdminVisits = asyncHandler(async (req, res) => {
     .limit(limit)
     .lean();
 
+  const now = new Date();
   const mapped = visits.map(v => {
     v.canEdit = true;
     v.canDelete = true;
-    return v;
+    return injectFollowUpStatus(v, now);
   });
 
   res.status(200).json({ success: true, data: mapped, pagination: { total, page, pages: Math.ceil(total / limit) } });
@@ -136,10 +175,10 @@ exports.getVisit = asyncHandler(async (req, res) => {
     .populate("company", "nameAr nameEn region")
     .populate("engineer", "fullName region");
 
-  if (!visit) return res.status(404).json({ success: false, message: "\u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f\u0629" });
+  if (!visit) return res.status(404).json({ success: false, message: "غير موجودة" });
 
   if (req.user.role === "engineer" && visit.engineer._id.toString() !== req.user._id.toString()) {
-    return res.status(403).json({ success: false, message: "\u0635\u0644\u0627\u062d\u064a\u0629 \u0645\u0631\u0641\u0648\u0636\u0629" });
+    return res.status(403).json({ success: false, message: "صلاحية مرفوضة" });
   }
 
   const hours = (Date.now() - visit.createdAt.getTime()) / 3600000;
@@ -148,21 +187,22 @@ exports.getVisit = asyncHandler(async (req, res) => {
   v.canDelete = req.user.role === "admin" || hours <= EDIT_WINDOW_HOURS;
   if (req.user.role === "engineer") delete v.editHistory;
 
+  injectFollowUpStatus(v, new Date());
   res.status(200).json({ success: true, data: v });
 });
 
 exports.updateVisit = asyncHandler(async (req, res) => {
   const visit = await Visit.findById(req.params.id);
-  if (!visit || visit.isDeleted) return res.status(404).json({ success: false, message: "\u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f\u0629" });
+  if (!visit || visit.isDeleted) return res.status(404).json({ success: false, message: "غير موجودة" });
 
   if (req.user.role === "engineer" && visit.engineer.toString() !== req.user._id.toString()) {
-    return res.status(403).json({ success: false, message: "\u0635\u0644\u0627\u062d\u064a\u0629 \u0645\u0631\u0641\u0648\u0636\u0629" });
+    return res.status(403).json({ success: false, message: "صلاحية مرفوضة" });
   }
 
   if (req.user.role === "engineer") {
     const hours = (Date.now() - visit.createdAt.getTime()) / 3600000;
     if (hours > EDIT_WINDOW_HOURS) {
-      return res.status(403).json({ success: false, message: "\u0627\u0646\u062a\u0647\u062a \u0645\u0647\u0644\u0629 \u0627\u0644\u062a\u0639\u062f\u064a\u0644 (24 \u0633\u0627\u0639\u0629)" });
+      return res.status(403).json({ success: false, message: "انتهت مهلة التعديل (24 ساعة)" });
     }
   }
 
@@ -170,7 +210,29 @@ exports.updateVisit = asyncHandler(async (req, res) => {
     const vd = new Date(req.body.visitDate);
     const maxDate = new Date(Date.now() + 5 * 60000);
     if (vd > maxDate) {
-      return res.status(400).json({ success: false, message: "\u0644\u0627 \u064a\u0645\u0643\u0646 \u062a\u0633\u062c\u064a\u0644 \u0632\u064a\u0627\u0631\u0629 \u0641\u064a \u0627\u0644\u0645\u0633\u062a\u0642\u0628\u0644" });
+      return res.status(400).json({ success: false, message: "لا يمكن تسجيل زيارة في المستقبل" });
+    }
+  }
+
+  if (req.body.followUp && req.body.followUp.dueDate) {
+    const { getCairoStartOfDay } = require("../lib/dateUtils");
+    const today = getCairoStartOfDay(new Date());
+    const vDate = getCairoStartOfDay(new Date(req.body.visitDate || visit.visitDate));
+    const due = getCairoStartOfDay(new Date(req.body.followUp.dueDate));
+    
+    if (due < vDate) {
+      return res.status(400).json({ success: false, message: 'تاريخ المتابعة يجب أن يكون بعد أو في نفس يوم الزيارة' });
+    }
+    const maxDate = new Date(today);
+    maxDate.setDate(maxDate.getDate() + 365);
+    if (due > maxDate) {
+      return res.status(400).json({ success: false, message: 'تاريخ المتابعة أقصاه 365 يوم من اليوم' });
+    }
+    
+    req.body.followUp.dueDate = due;
+    if (visit.followUp && visit.followUp.done) {
+      req.body.followUp.done = true;
+      req.body.followUp.doneAt = visit.followUp.doneAt;
     }
   }
 
@@ -186,6 +248,15 @@ exports.updateVisit = asyncHandler(async (req, res) => {
       }
     }
   });
+  
+  if (req.body.followUp) {
+     const fOrig = visit.followUp ? { dueDate: visit.followUp.dueDate, note: visit.followUp.note } : null;
+     const fNew = { dueDate: req.body.followUp.dueDate, note: req.body.followUp.note };
+     if (JSON.stringify(fOrig) !== JSON.stringify(fNew)) {
+       changes.push({ field: "followUp", from: JSON.stringify(fOrig), to: JSON.stringify(fNew) });
+       visit.followUp = { ...visit.followUp, ...req.body.followUp };
+     }
+  }
 
   if (req.body.attendees && JSON.stringify(req.body.attendees) !== JSON.stringify(visit.attendees)) {
     changes.push({ field: "attendees", from: JSON.stringify(visit.attendees).substring(0,300), to: JSON.stringify(req.body.attendees).substring(0,300) });
@@ -209,21 +280,22 @@ exports.updateVisit = asyncHandler(async (req, res) => {
   v.canDelete = req.user.role === "admin" || hours <= EDIT_WINDOW_HOURS;
   if (req.user.role === "engineer") delete v.editHistory;
 
+  injectFollowUpStatus(v, new Date());
   res.status(200).json({ success: true, data: v });
 });
 
 exports.deleteVisit = asyncHandler(async (req, res) => {
   const visit = await Visit.findById(req.params.id);
-  if (!visit || visit.isDeleted) return res.status(404).json({ success: false, message: "\u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f\u0629" });
+  if (!visit || visit.isDeleted) return res.status(404).json({ success: false, message: "غير موجودة" });
   
   if (req.user.role === "engineer" && visit.engineer.toString() !== req.user._id.toString()) {
-    return res.status(403).json({ success: false, message: "\u0635\u0644\u0627\u062d\u064a\u0629 \u0645\u0631\u0641\u0648\u0636\u0629" });
+    return res.status(403).json({ success: false, message: "صلاحية مرفوضة" });
   }
 
   if (req.user.role === "engineer") {
     const hours = (Date.now() - visit.createdAt.getTime()) / 3600000;
     if (hours > EDIT_WINDOW_HOURS) {
-      return res.status(403).json({ success: false, message: "\u0627\u0646\u062a\u0647\u062a \u0645\u0647\u0644\u0629 \u0627\u0644\u062a\u0639\u062f\u064a\u0644 (24 \u0633\u0627\u0639\u0629)" });
+      return res.status(403).json({ success: false, message: "انتهت مهلة التعديل (24 ساعة)" });
     }
   }
 
@@ -232,11 +304,10 @@ exports.deleteVisit = asyncHandler(async (req, res) => {
   visit.deletedBy = req.user._id;
   await visit.save();
 
-  res.status(200).json({ success: true, message: "\u062a\u0645 \u0627\u0644\u062d\u0630\u0641" });
+  res.status(200).json({ success: true, message: "تم الحذف" });
 });
 
 exports.getMineSummary = require("../utils/asyncHandler")(async (req, res) => {
-  const Visit = require("../models/Visit");
   const { getCairoStartOfDay, getCairoStartOfMonth } = require("../lib/dateUtils");
   const now = new Date();
   const startOfToday = getCairoStartOfDay(now);
