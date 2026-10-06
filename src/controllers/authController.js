@@ -10,7 +10,8 @@ exports.loginSchema = z.object({
 });
 
 exports.login = asyncHandler(async (req, res) => {
-  const { username, password } = req.body;
+  let { username, password } = req.body;
+    if (username) username = username.trim().toLowerCase();
 
   const user = await User.findOne({ username }).select('+password');
 
