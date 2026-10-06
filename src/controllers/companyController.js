@@ -248,9 +248,14 @@ exports.updateCompany = asyncHandler(async (req, res) => {
   
   const newNameAr = req.body.nameAr !== undefined ? req.body.nameAr : company.nameAr;
   const newNameEn = req.body.nameEn !== undefined ? req.body.nameEn : company.nameEn;
-  const dupCheck = await checkDuplicatesLogic(newNameAr, newNameEn, req.body.region || company.region, company._id, req.query.confirmSimilar, Company);
-  if (dupCheck) {
-    return res.status(409).json({ success: false, message: dupCheck.code === "DUPLICATE" ? "\u0634\u0631\u0643\u0629 \u0645\u0643\u0631\u0631\u0629" : "\u0634\u0631\u0643\u0629 \u0645\u0634\u0627\u0628\u0647\u0629 \u0645\u0648\u062c\u0648\u062f\u0629", code: dupCheck.code, data: dupCheck.company });
+  const nameChanged = req.body.nameAr !== undefined || req.body.nameEn !== undefined;
+  const regionChanged = req.body.region !== undefined && req.body.region.toString() !== company.region.toString();
+  
+  if (nameChanged || regionChanged) {
+    const dupCheck = await checkDuplicatesLogic(newNameAr, newNameEn, req.body.region || company.region, company._id, req.query.confirmSimilar, Company);
+    if (dupCheck) {
+      return res.status(409).json({ success: false, message: dupCheck.code === "DUPLICATE" ? "\u0634\u0631\u0643\u0629 \u0645\u0643\u0631\u0631\u0629" : "\u0634\u0631\u0643\u0629 \u0645\u0634\u0627\u0628\u0647\u0629 \u0645\u0648\u062c\u0648\u062f\u0629", code: dupCheck.code, data: dupCheck.company });
+    }
   }
   Object.assign(company, req.body);
   const updated = await company.save();
