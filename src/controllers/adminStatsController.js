@@ -177,7 +177,7 @@ exports.getStaleCompanies = asyncHandler(async (req, res) => {
         from: 'visits',
         let: { compId: '$_id' },
         pipeline: [
-          { $match: { $expr: { $eq: ['$company', '$compId'] }, isDeleted: { $ne: true } } },
+          { $match: { $expr: { $eq: ['$company', '$$compId'] }, isDeleted: { $ne: true } } },
           { $sort: { visitDate: -1 } },
           { $limit: 1 },
           { $project: { visitDate: 1 } }
