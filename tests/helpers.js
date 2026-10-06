@@ -7,6 +7,7 @@ const Company = require('../src/models/Company');
 const Visit = require('../src/models/Visit');
 
 async function setupWorld() {
+  await require('mongoose').connection.db.dropDatabase();
   const world = {};
 
   // Regions
@@ -122,7 +123,8 @@ async function setupWorld() {
 
 async function loginAs(app, user) {
   const agent = request.agent(app);
-  await agent.post('/api/auth/login').send({ username: user.username, password: 'password123' });
+  const loginRes = await agent.post('/api/auth/login').send({ username: user.username, password: 'password123' });
+  if (loginRes.statusCode !== 200) console.error('LOGIN FAILED:', loginRes.statusCode, loginRes.body);
   return agent;
 }
 
