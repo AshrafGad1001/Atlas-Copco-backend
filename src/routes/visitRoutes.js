@@ -15,7 +15,14 @@ router.get('/mine/summary', require('../controllers/visitController').getMineSum
 router.get('/mine', getVisits);
 router.get('/follow-ups/mine', require('../controllers/visitController').getMineFollowUps);
 
+
+router.route('/:id/follow-up')
+  .put(require('../controllers/visitController').upsertFollowUp)
+  .patch(require('../controllers/visitController').patchFollowUp)
+  .delete(require('../controllers/visitController').deleteFollowUp);
+
 router.route('/:id')
+
   .get(getVisit)
   .patch(validate(visitSchema), updateVisit)
   .delete(deleteVisit);

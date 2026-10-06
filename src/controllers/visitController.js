@@ -394,3 +394,61 @@ exports.getAdminFollowUps = asyncHandler(async (req, res) => {
 
   res.status(200).json({ success: true, data: mapped, pagination: { total, page, Math: Math.ceil(total / limit) } });
 });
+
+
+exports.upsertFollowUp = asyncHandler(async (req, res, next) => {
+  const visit = await Visit.findById(req.params.id);
+  if (!visit) return res.status(404).json({ success: false, message: 'Visit not found' });
+  if (req.user.role === 'engineer' && visit.engineer.toString() !== req.user.id) {
+    return res.status(403).json({ success: false, message: 'Not authorized' });
+  }
+
+  const { dueDate, note } = req.body;
+  if (!dueDate) return res.status(400).json({ success: false, message: 'dueDate is required' });
+  
+  const vDate = new Date(visit.visitDate);
+  const dDate = new Date(dueDate);
+  if (dDate < vDate) return res.status(400).json({ success: false, message: 'Due date cannot be before visit date' });
+  const maxDate = new Date(vDate);
+  maxDate.setDate(maxDate.getDate() + 365);
+  if (dDate > maxDate) return res.status(400).json({ success: false, message: 'Due date cannot be more than a year after visit date' });
+
+  visit.followUp = { dueDate, note: note || '', done: false };
+  await visit.save();
+  res.status(200).json({ success: true, data: visit });
+});
+
+exports.patchFollowUp = asyncHandler(async (req, res, next) => {
+  const visit = await Visit.findById(req.params.id);
+  if (!visit) return res.status(404).json({ success: false, message: 'Visit not found' });
+  if (req.user.role === 'engineer' && visit.engineer.toString() !== req.user.id) {
+    return res.status(403).json({ success: false, message: 'Not authorized' });
+  }
+  if (!visit.followUp || !visit.followUp.dueDate) {
+    return res.status(400).json({ success: false, message: 'Visit has no follow-up' });
+  }
+
+  if (req.body.done !== undefined) visit.followUp.done = req.body.done;
+  if (req.body.note !== undefined) visit.followUp.note = req.body.note;
+  if (req.body.dueDate) {
+    const vDate = new Date(visit.visitDate);
+    const dDate = new Date(req.body.dueDate);
+    if (dDate < vDate) return res.status(400).json({ success: false, message: 'Due date cannot be before visit date' });
+    visit.followUp.dueDate = req.body.dueDate;
+  }
+  
+  await visit.save();
+  res.status(200).json({ success: true, data: visit });
+});
+
+exports.deleteFollowUp = asyncHandler(async (req, res, next) => {
+  const visit = await Visit.findById(req.params.id);
+  if (!visit) return res.status(404).json({ success: false, message: 'Visit not found' });
+  if (req.user.role === 'engineer' && visit.engineer.toString() !== req.user.id) {
+    return res.status(403).json({ success: false, message: 'Not authorized' });
+  }
+
+  visit.followUp = undefined;
+  await visit.save();
+  res.status(200).json({ success: true, data: visit });
+});
