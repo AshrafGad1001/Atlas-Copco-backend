@@ -325,3 +325,72 @@ exports.getMineSummary = require("../utils/asyncHandler")(async (req, res) => {
   res.status(200).json({ success: true, data: { today, last7Days, month, followUps: { today: todayDue, overdue, upcoming } } });
 
 });
+
+
+exports.getMineFollowUps = asyncHandler(async (req, res) => {
+  const { getCairoStartOfDay } = require("../lib/dateUtils");
+  const today = getCairoStartOfDay(new Date());
+
+  const filter = { engineer: req.user._id, isDeleted: false, 'followUp.dueDate': { $exists: true }, 'followUp.done': { $ne: true } };
+
+  if (req.query.status) {
+    if (req.query.status === 'overdue') {
+      filter['followUp.dueDate'] = { $lt: today };
+    } else if (req.query.status === 'today') {
+      filter['followUp.dueDate'] = today;
+    } else if (req.query.status === 'upcoming') {
+      filter['followUp.dueDate'] = { $gt: today };
+    }
+  }
+
+  const visits = await Visit.find(filter)
+    .populate("company", "nameAr nameEn region")
+    .sort({ "followUp.dueDate": 1 })
+    .lean();
+
+  const now = new Date();
+  const mapped = visits.map(v => injectFollowUpStatus(v, now));
+
+  res.status(200).json({ success: true, data: mapped });
+});
+
+exports.getAdminFollowUps = asyncHandler(async (req, res) => {
+  const { getCairoStartOfDay } = require("../lib/dateUtils");
+  const today = getCairoStartOfDay(new Date());
+
+  const filter = { isDeleted: false, 'followUp.dueDate': { $exists: true }, 'followUp.done': { $ne: true } };
+
+  if (req.query.engineer) filter.engineer = req.query.engineer;
+  if (req.query.status) {
+    if (req.query.status === 'overdue') {
+      filter['followUp.dueDate'] = { $lt: today };
+    } else if (req.query.status === 'today') {
+      filter['followUp.dueDate'] = today;
+    } else if (req.query.status === 'upcoming') {
+      filter['followUp.dueDate'] = { $gt: today };
+    }
+  }
+  
+  if (req.query.region) {
+    const Company = require('../models/Company');
+    const comps = await Company.find({ region: req.query.region }).select("_id").lean();
+    filter.company = { $in: comps.map(c => c._id) };
+  }
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+
+  const total = await Visit.countDocuments(filter);
+  const visits = await Visit.find(filter)
+    .populate("company", "nameAr nameEn region")
+    .populate("engineer", "fullName")
+    .sort({ "followUp.dueDate": 1 })
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .lean();
+
+  const now = new Date();
+  const mapped = visits.map(v => injectFollowUpStatus(v, now));
+
+  res.status(200).json({ success: true, data: mapped, pagination: { total, page, Math: Math.ceil(total / limit) } });
+});

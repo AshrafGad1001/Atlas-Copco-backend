@@ -13,6 +13,7 @@ router.route('/')
 
 router.get('/mine/summary', require('../controllers/visitController').getMineSummary);
 router.get('/mine', getVisits);
+router.get('/follow-ups/mine', require('../controllers/visitController').getMineFollowUps);
 
 router.route('/:id')
   .get(getVisit)

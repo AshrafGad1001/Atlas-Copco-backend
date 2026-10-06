@@ -9,6 +9,7 @@ router.use(protect);
 router.use(restrictTo("admin"));
 
 router.get("/", getAdminVisits);
+router.get("/follow-ups", require("../controllers/visitController").getAdminFollowUps);
 router.get("/:id", getVisit);
 
 module.exports = router;
