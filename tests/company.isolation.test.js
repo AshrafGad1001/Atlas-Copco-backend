@@ -3,7 +3,7 @@ const request = require('supertest');
 const app = require('../app');
 const mongoose = require('mongoose');
 const { setupWorld, loginAs } = require('./helpers');
-const { const Company = require('../src/models/Company');
+const Company = require('../src/models/Company');
 
 let world;
 let adminAgent;

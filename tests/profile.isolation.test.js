@@ -3,7 +3,7 @@ const request = require('supertest');
 const app = require('../app');
 const mongoose = require('mongoose');
 const { setupWorld, loginAs } = require('./helpers');
-const { const User = require('../src/models/User');
+const User = require('../src/models/User');
 
 let world;
 let engAAgent;
