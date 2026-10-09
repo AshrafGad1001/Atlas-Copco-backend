@@ -1,6 +1,6 @@
 
 const express = require("express");
-const { createCompany, getCompanies, updateCompany, deleteCompany, companySchema, updateCompanySchema, getCompanyAttendees, getCompanyHistory, mergeCompanies } = require("../controllers/companyController");
+const { getCompany, createCompany, getCompanies, updateCompany, deleteCompany, companySchema, updateCompanySchema, getCompanyAttendees, getCompanyHistory, mergeCompanies } = require("../controllers/companyController");
 const { protect } = require("../middlewares/authMiddleware");
 const validate = require("../middlewares/validate");
 
