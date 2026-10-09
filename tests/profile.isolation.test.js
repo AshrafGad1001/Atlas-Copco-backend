@@ -6,11 +6,11 @@ const { setupWorld, loginAs } = require('./helpers');
 const User = require('../src/models/User');
 
 let world;
-let engAAgent;
+let engaAgent;
 
 beforeEach(async () => {
         world = await setupWorld();
-  engAAgent = await loginAs(app, world.engA);
+  engaAgent = await loginAs(app, world.enga);
 });
 
 
@@ -20,26 +20,26 @@ describe('Profile Isolation Tests', () => {
       fullName: 'Engineer A Mod',
       role: 'admin',
       region: world.region2._id.toString(),
-      username: 'engA_hacked',
+      username: 'enga_hacked',
       isActive: false,
       _id: new mongoose.Types.ObjectId().toString()
     };
     
-    const res = await engAAgent.patch('/api/profile').send(maliciousPayload);
+    const res = await engaAgent.patch('/api/profile').send(maliciousPayload);
     expect(res.statusCode).toBe(200);
     
     // verify in DB
-    const dbUser = await User.findById(world.engA._id);
+    const dbUser = await User.findById(world.enga._id);
     expect(dbUser.fullName).toBe('Engineer A Mod');
     expect(dbUser.role).toBe('engineer');
     expect(dbUser.region.toString()).toBe(world.region1._id.toString());
     expect(dbUser.username).toBe('enga');
     expect(dbUser.isActive).toBe(true);
-    expect(dbUser._id.toString()).toBe(world.engA._id.toString());
+    expect(dbUser._id.toString()).toBe(world.enga._id.toString());
   });
 
   it('GET /auth/me returns the profile completely', async () => {
-    const res = await engAAgent.get('/api/auth/me');
+    const res = await engaAgent.get('/api/auth/me');
     expect(res.statusCode).toBe(200);
     expect(res.body.data.username).toBe('enga');
     expect(res.body.data.role).toBe('engineer');

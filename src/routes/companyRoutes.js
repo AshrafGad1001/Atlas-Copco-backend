@@ -24,6 +24,7 @@ router.route("/:id/history")
   .get(getCompanyHistory);
 
 router.route("/:id")
+  .get(getCompany)
   .patch((req, res, next) => {
     if (req.user && req.user.role === "engineer") {
       delete req.body.region;

@@ -6,13 +6,13 @@ const mongoose = require('mongoose');
 const { setupWorld, loginAs } = require('./helpers');
 let world;
 let adminAgent;
-let engAgent;
+let engagent;
 let noAuthAgent;
 
 beforeEach(async () => {
         world = await setupWorld();
   adminAgent = await loginAs(app, world.admin);
-  engAgent = await loginAs(app, world.engA);
+  engagent = await loginAs(app, world.enga);
   noAuthAgent = request(app);
 });
 
@@ -77,7 +77,7 @@ describe('Authorization Matrix', () => {
     
     // 2. Engineer on Admin route
     if (allowed === 'admin') {
-      const res2 = await engAgent[method.toLowerCase()](path).send({});
+      const res2 = await engagent[method.toLowerCase()](path).send({});
       expect(res2.statusCode).toBe(403);
     }
     

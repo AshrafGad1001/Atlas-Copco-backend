@@ -5,17 +5,17 @@ const { setupWorld, loginAs } = require('./helpers');
 const Visit = require('../src/models/Visit');
 
 let world;
-let engAAgent;
+let engaAgent;
 
 beforeEach(async () => {
   world = await setupWorld();
-  engAAgent = await loginAs(app, world.engA);
+  engaAgent = await loginAs(app, world.enga);
 });
 
 describe('Dashboard Stats Tests', () => {
   it('returns correct counts for today, last7Days, and month visits', async () => {
     // Delete existing visits to start clean for Eng A
-    await Visit.deleteMany({ engineer: world.engA._id });
+    await Visit.deleteMany({ engineer: world.enga._id });
 
     // Create 3 visits: today, 5 days ago, and 15 days ago
     const today = new Date();
@@ -28,12 +28,12 @@ describe('Dashboard Stats Tests', () => {
 
     // Create in DB
     await Visit.insertMany([
-      { company: world.c1._id, engineer: world.engA._id, visitDate: today, type: 'planned' },
-      { company: world.c1._id, engineer: world.engA._id, visitDate: fiveDaysAgo, type: 'planned' },
-      { company: world.c1._id, engineer: world.engA._id, visitDate: fifteenDaysAgo, type: 'planned' }
+      { company: world.c1._id, engineer: world.enga._id, visitDate: today, type: 'planned' },
+      { company: world.c1._id, engineer: world.enga._id, visitDate: fiveDaysAgo, type: 'planned' },
+      { company: world.c1._id, engineer: world.enga._id, visitDate: fifteenDaysAgo, type: 'planned' }
     ]);
 
-    const res = await engAAgent.get('/api/visits/mine/summary');
+    const res = await engaAgent.get('/api/visits/mine/summary');
     expect(res.statusCode).toBe(200);
     
     // today = 1

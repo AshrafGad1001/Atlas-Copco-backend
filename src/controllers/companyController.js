@@ -337,23 +337,23 @@ exports.getCompanyHistory = asyncHandler(async (req, res) => {
     .skip(skip)
     .limit(limit)
     .select('visitDate type notes nextStep attendees engineer')
-    .populate({
-      path: 'engineer',
-      select: 'fullName profileImage.url'
-    })
+    .populate({ path: 'engineer', select: '_id fullName profileImage.url' })
     .lean();
 
   const total = await Visit.countDocuments({ company: company._id, isDeleted: { $ne: true } });
 
-  res.status(200).json({
-    success: true,
-    data: visits,
-    company,
-    pagination: {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit)
-    }
-  });
+  res.status(200).json({ success: true, data: { visits, company, pagination: { page, limit, total, pages: Math.ceil(total / limit) } } });
+});
+
+
+exports.getCompany = asyncHandler(async (req, res) => {
+  if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+    return res.status(400).json({ success: false, message: "ID غير صالح" });
+  }
+  const company = await Company.findOne({ _id: req.params.id, isDeleted: false });
+  if (!company) return res.status(404).json({ success: false, message: "الشركة غير موجودة" });
+  if (req.user.role === 'engineer' && company.region.toString() !== req.user.region.toString()) {
+    return res.status(403).json({ success: false, message: "غير مصرح" });
+  }
+  res.status(200).json({ success: true, data: company });
 });

@@ -7,12 +7,12 @@ const Company = require('../src/models/Company');
 
 let world;
 let adminAgent;
-let engAAgent;
+let engaAgent;
 
 beforeEach(async () => {
   world = await setupWorld();
   adminAgent = await loginAs(app, world.admin);
-  engAAgent = await loginAs(app, world.engA);
+  engaAgent = await loginAs(app, world.enga);
 });
 
 describe('Company Features Tests', () => {
@@ -22,11 +22,11 @@ describe('Company Features Tests', () => {
     expect(delRes.statusCode).toBe(200);
 
     // Old visit still exists
-    const res = await engAAgent.get('/api/visits/mine');
+    const res = await engaAgent.get('/api/visits/mine');
     expect(res.body.data.some(v => v.company._id.toString() === world.c1._id.toString())).toBe(true);
 
     // Cannot add new visit to deleted company
-    const newVisitRes = await engAAgent.post('/api/visits').send({
+    const newVisitRes = await engaAgent.post('/api/visits').send({
       company: world.c1._id,
       visitDate: new Date(),
       type: 'completed',

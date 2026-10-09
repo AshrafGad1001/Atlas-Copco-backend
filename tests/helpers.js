@@ -24,7 +24,7 @@ async function setupWorld() {
     phones: [{ number: '01000000000' }]
   });
 
-  world.engA = await User.create({
+  world.enga = await User.create({
     fullName: 'Engineer A',
     username: 'enga',
     email: 'enga@test.com',
@@ -90,7 +90,7 @@ async function setupWorld() {
   // Visits
   world.vA1 = await Visit.create({
     company: world.c1._id,
-    engineer: world.engA._id,
+    engineer: world.enga._id,
     visitDate: new Date(),
     type: 'completed',
     notes: 'Visit A1 notes',

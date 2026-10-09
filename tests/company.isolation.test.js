@@ -7,18 +7,18 @@ const Company = require('../src/models/Company');
 
 let world;
 let adminAgent;
-let engAgent;
+let engagent;
 
 beforeEach(async () => {
         world = await setupWorld();
   adminAgent = await loginAs(app, world.admin);
-  engAgent = await loginAs(app, world.engA);
+  engagent = await loginAs(app, world.enga);
 });
 
 
 describe('Company Isolation Tests', () => {
   it('A list: c1 and c1b only', async () => {
-    const res = await engAgent.get('/api/companies');
+    const res = await engagent.get('/api/companies');
     expect(res.statusCode).toBe(200);
     expect(res.body.data.length).toBe(2);
     const ids = res.body.data.map(c => c._id.toString());
@@ -28,29 +28,29 @@ describe('Company Isolation Tests', () => {
   });
 
   it('A searches by c2 name: empty', async () => {
-    const res = await engAgent.get('/api/companies?search=Company 2');
+    const res = await engagent.get('/api/companies?search=Company 2');
     expect(res.statusCode).toBe(200);
     expect(res.body.data.length).toBe(0);
   });
 
   it('A GET, PATCH, DELETE on c2 = 403', async () => {
-    let res = await engAgent.get('/api/companies/' + world.c2._id);
+    let res = await engagent.get('/api/companies/' + world.c2._id);
     expect(res.statusCode).toBe(403);
     
-    res = await engAgent.patch('/api/companies/' + world.c2._id).send({ nameEn: 'New' });
+    res = await engagent.patch('/api/companies/' + world.c2._id).send({ nameEn: 'New' });
     expect(res.statusCode).toBe(403);
     
-    res = await engAgent.delete('/api/companies/' + world.c2._id);
+    res = await engagent.delete('/api/companies/' + world.c2._id);
     expect(res.statusCode).toBe(403);
   });
 
   it('A DELETE on c1 = 403', async () => {
-    const res = await engAgent.delete('/api/companies/' + world.c1._id);
+    const res = await engagent.delete('/api/companies/' + world.c1._id);
     expect(res.statusCode).toBe(403);
   });
 
   it('A POST with region=region2 in body -> 201, registered in region1', async () => {
-    const res = await engAgent.post('/api/companies').send({
+    const res = await engagent.post('/api/companies').send({
       nameAr: 'شركة جديدة',
       nameEn: 'New Company',
       region: world.region2._id.toString(),
@@ -61,7 +61,7 @@ describe('Company Isolation Tests', () => {
   });
 
   it('A PATCH on c1 with region and isDeleted in body -> ignored', async () => {
-    const res = await engAgent.patch('/api/companies/' + world.c1._id).send({
+    const res = await engagent.patch('/api/companies/' + world.c1._id).send({
       region: world.region2._id.toString(),
       isDeleted: true
     });
@@ -84,7 +84,7 @@ describe('Company Isolation Tests', () => {
     expect(res.body.data.length).toBe(1);
     expect(res.body.data[0]._id.toString()).toBe(world.c2._id.toString());
     
-    res = await engAgent.get('/api/companies?region=' + world.region2._id.toString());
+    res = await engagent.get('/api/companies?region=' + world.region2._id.toString());
     expect(res.statusCode).toBe(200);
     // Engineer A is forced to region1, so it sees their region companies (or maybe empty if overridden?
     // Wait, the requirement says "A مع ?region=region2 لسه منطقته بس" which means they see region1 companies.

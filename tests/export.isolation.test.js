@@ -5,18 +5,18 @@ const mongoose = require('mongoose');
 const { setupWorld, loginAs, asXlsxRows } = require('./helpers');
 let world;
 let adminAgent;
-let engAAgent;
+let engaAgent;
 
 beforeEach(async () => {
         world = await setupWorld();
   adminAgent = await loginAs(app, world.admin);
-  engAAgent = await loginAs(app, world.engA);
+  engaAgent = await loginAs(app, world.enga);
 });
 
 
 describe('Export Isolation Tests', () => {
   it('A GET /export-visits returns his visits only (vA1)', async () => {
-    const res = await engAAgent.get('/api/reports/export-visits').responseType('blob');
+    const res = await engaAgent.get('/api/reports/export-visits').responseType('blob');
     expect(res.statusCode).toBe(200);
     
     const rows = await asXlsxRows(res);

@@ -5,20 +5,20 @@ const mongoose = require('mongoose');
 const { setupWorld, loginAs } = require('./helpers');
 let world;
 let adminAgent;
-let engAAgent;
+let engaAgent;
 let engBAgent;
 
 beforeEach(async () => {
         world = await setupWorld();
   adminAgent = await loginAs(app, world.admin);
-  engAAgent = await loginAs(app, world.engA);
+  engaAgent = await loginAs(app, world.enga);
   engBAgent = await loginAs(app, world.engB);
 });
 
 
 describe('History Isolation Tests', () => {
   it('A history/c1 returns 200 with vA1 and vC1, but attendees hidden for vC1', async () => {
-    const res = await engAAgent.get('/api/companies/' + world.c1._id + '/history');
+    const res = await engaAgent.get('/api/companies/' + world.c1._id + '/history');
     expect(res.statusCode).toBe(200);
     expect(res.body.data.length).toBe(2);
     
@@ -37,7 +37,7 @@ describe('History Isolation Tests', () => {
   });
 
   it('A attendees/c1 returns only his attendees', async () => {
-    const res = await engAAgent.get('/api/companies/' + world.c1._id + '/attendees');
+    const res = await engaAgent.get('/api/companies/' + world.c1._id + '/attendees');
     expect(res.statusCode).toBe(200);
     
     // attendees endpoint should return all distinct attendees for company.
