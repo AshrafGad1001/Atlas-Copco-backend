@@ -7,7 +7,10 @@ const Company = require('../src/models/Company');
 const Visit = require('../src/models/Visit');
 
 async function setupWorld() {
-  await require('mongoose').connection.db.dropDatabase();
+  const collections = mongoose.connection.collections;
+  for (const key in collections) {
+    await collections[key].deleteMany({});
+  }
   const world = {};
 
   // Regions
@@ -21,7 +24,8 @@ async function setupWorld() {
     email: 'admin@test.com',
     password: 'password123',
     role: 'admin',
-    phones: [{ number: '01000000000' }]
+    phones: [{ number: '01000000000' }],
+    profileImage: { url: 'https://example.com/admin.jpg' }
   });
 
   world.enga = await User.create({
@@ -31,38 +35,42 @@ async function setupWorld() {
     password: 'password123',
     role: 'engineer',
     region: world.region1._id,
-    phones: [{ number: '01000000001' }]
+    phones: [{ number: '01000000001' }],
+    profileImage: { url: 'https://example.com/enga.jpg' }
   });
 
   world.engC = await User.create({
     fullName: 'Engineer C',
-    username: 'engC',
+    username: 'engc',
     email: 'engc@test.com',
     password: 'password123',
     role: 'engineer',
     region: world.region1._id,
-    phones: [{ number: '01000000002' }]
+    phones: [{ number: '01000000002' }],
+    profileImage: { url: 'https://example.com/engc.jpg' }
   });
 
   world.engB = await User.create({
     fullName: 'Engineer B',
-    username: 'engB',
+    username: 'engb',
     email: 'engb@test.com',
     password: 'password123',
     role: 'engineer',
     region: world.region2._id,
-    phones: [{ number: '01000000003' }]
+    phones: [{ number: '01000000003' }],
+    profileImage: { url: 'https://example.com/engb.jpg' }
   });
 
   world.engInactive = await User.create({
     fullName: 'Engineer Inactive',
-    username: 'engIn',
+    username: 'engin',
     email: 'engin@test.com',
     password: 'password123',
     role: 'engineer',
     region: world.region1._id,
     isActive: false,
-    phones: [{ number: '01000000004' }]
+    phones: [{ number: '01000000004' }],
+    profileImage: { url: 'https://example.com/engin.jpg' }
   });
 
   // Companies
