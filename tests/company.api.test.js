@@ -75,12 +75,14 @@ describe("Company API Tests", () => {
       .set("Cookie", [`token=${engToken}`])
       .send({ isDeleted: true });
     expect(res.statusCode).toBe(200);
+    const checkPatch = await Company.findById(comp._id);
+    expect(checkPatch.isDeleted).toBe(false);
 
     // Engineer tries to delete
     res = await request(app)
       .delete(`/api/companies/${comp._id}`)
       .set("Cookie", [`token=${engToken}`]);
-    expect(res.statusCode).toBe(200);
+    expect(res.statusCode).toBe(403);
 
     // Admin tries to change region
     res = await request(app)
