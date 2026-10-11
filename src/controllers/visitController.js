@@ -85,8 +85,7 @@ exports.createVisit = asyncHandler(async (req, res) => {
     }
   }
 
-  let visit = await Visit.create(req.body);
-  visit = await visit.populate('engineer', 'fullName profileImage.url');
+  const visit = await Visit.create(req.body);
   const v = visit.toObject();
   injectFollowUpStatus(v, new Date());
   res.status(201).json({ success: true, data: v });
@@ -109,7 +108,7 @@ exports.getVisits = asyncHandler(async (req, res) => {
 
   const visits = await Visit.find(filter)
     .populate("company", "nameAr nameEn region")
-    .populate("engineer", "fullName")
+    .populate("engineer", "_id fullName profileImage.url")
     .sort("-visitDate")
     .skip((page - 1) * limit)
     .limit(limit)
@@ -155,7 +154,7 @@ exports.getAdminVisits = asyncHandler(async (req, res) => {
   const total = await Visit.countDocuments(filter);
   const visits = await Visit.find(filter)
     .populate("company", "nameAr nameEn region")
-    .populate("engineer", "fullName")
+    .populate("engineer", "_id fullName profileImage.url")
     .sort("-visitDate")
     .skip((page - 1) * limit)
     .limit(limit)
@@ -174,7 +173,7 @@ exports.getAdminVisits = asyncHandler(async (req, res) => {
 exports.getVisit = asyncHandler(async (req, res) => {
   const visit = await Visit.findOne({ _id: req.params.id, isDeleted: false })
     .populate("company", "nameAr nameEn region")
-    .populate("engineer", "fullName region");
+    .populate("engineer", "_id fullName profileImage.url");
 
   if (!visit) return res.status(404).json({ success: false, message: "غير موجودة" });
 
