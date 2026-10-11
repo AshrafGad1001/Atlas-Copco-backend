@@ -3,15 +3,17 @@ const mongoose = require('mongoose');
 const path = require('path');
 const { assertSafeTestUri } = require('./testGuard');
 
+const crypto = require('crypto');
+
 function getFileTestUri(baseUri) {
-  let suffix = 'test';
+  let hash = 'def';
   try {
     const testPath = expect.getState().testPath;
     if (testPath) {
-      suffix = path.basename(testPath).replace(/[^a-zA-Z0-9]/g, '_');
+      hash = crypto.createHash('md5').update(path.basename(testPath)).digest('hex').substring(0, 8);
     }
   } catch (e) {}
-  return baseUri.replace(/\/([^\/?]+)(\?|$)/, (m, db, q) => '/' + db + '_' + suffix + q);
+  return baseUri.replace(/\/([^\/?]+)(\?|$)/, (m, db, q) => '/' + db + '_' + hash + q);
 }
 
 beforeAll(async () => {
