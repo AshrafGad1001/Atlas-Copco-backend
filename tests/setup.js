@@ -23,7 +23,7 @@ beforeAll(async () => {
   
   assertSafeTestUri(fileUri, MONGO_URI);
 
-  await mongoose.connect(fileUri, { driverInfo: {} });
+  await mongoose.connect(fileUri);
 });
 
 afterAll(async () => {

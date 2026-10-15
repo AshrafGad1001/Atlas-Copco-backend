@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --runInBand --testTimeout=10000",
+    "test": "jest --runInBand",
     "seed:admin": "node src/utils/seedAdmin.js",
     "backfill:company-keys": "node scripts/backfill-company-keys.js",
     "seed:demo": "node scripts/seedDemo.js",
@@ -27,7 +27,8 @@
     "express-rate-limit": "^8.7.0",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.10.3",
+    "mongodb": "^7.7.0",
+    "mongoose": "^9.11.2",
     "multer": "^2.4.0",
     "streamifier": "^0.1.1",
     "zod": "^4.6.5"
