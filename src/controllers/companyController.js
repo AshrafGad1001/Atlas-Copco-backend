@@ -5,8 +5,8 @@ const asyncHandler = require('../utils/asyncHandler');
 
 const xssRegex = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/i;
 const baseSchema = z.object({
-  nameAr: z.string().optional().refine(val => !val || !xssRegex.test(val), "\u0627\u0633\u0645 \u063a\u064a\u0631 \u0635\u0627\u0644\u062d"),
-  nameEn: z.string().optional().refine(val => !val || !xssRegex.test(val), "\u0627\u0633\u0645 \u063a\u064a\u0631 \u0635\u0627\u0644\u062d"),
+  nameAr: z.string().optional().refine(val => !val || !xssRegex.test(val), "الاسم يحتوي على رموز غير مسموح بها"),
+  nameEn: z.string().optional().refine(val => !val || !xssRegex.test(val), "الاسم يحتوي على رموز غير مسموح بها"),
   region: z.string().min(1, "\u0627\u0644\u0645\u0646\u0637\u0642\u0629 \u0645\u0637\u0644\u0648\u0628\u0629"),
   address: z.string().optional(),
   industry: z.string().optional(),
