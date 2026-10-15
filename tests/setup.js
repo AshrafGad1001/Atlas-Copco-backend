@@ -1,5 +1,4 @@
 require('dotenv').config();
-jest.setTimeout(120000);
 const mongoose = require('mongoose');
 const path = require('path');
 const { assertSafeTestUri } = require('./testGuard');
@@ -23,8 +22,8 @@ beforeAll(async () => {
   
   assertSafeTestUri(fileUri, MONGO_URI);
 
-  await mongoose.connect(fileUri);
-});
+  await mongoose.connect(fileUri, { serverSelectionTimeoutMS: 30000 });
+}, 60000);
 
 afterAll(async () => {
   if (mongoose.connection.readyState !== 0) {
