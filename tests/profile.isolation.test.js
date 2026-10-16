@@ -39,6 +39,7 @@ describe('Profile Isolation Tests', () => {
   });
 
   it('GET /auth/me returns the profile completely', async () => {
+    await engaAgent.patch('/api/profile').send({ fullName: 'Engineer A Mod' });
     const res = await engaAgent.get('/api/auth/me');
     expect(res.statusCode).toBe(200);
     expect(res.body.data.username).toBe('enga');

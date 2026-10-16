@@ -31,3 +31,6 @@
 - [x] E: Setup PWA and offline support (???)
 - [x] F: Final checks and smoke test (???)
 - [x] Step 1: Fix jest timeouts - تمت
+- [x] Step 2: Clean measurement - تمت
+- [x] Step 3: Fix true regressions - تمت
+
